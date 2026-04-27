@@ -1,0 +1,453 @@
+{
+  "preguntas": [
+    {
+      "numero": 1,
+      "seccion": "Verbal",
+      "tema": "Sinonimia Contextual",
+      "enunciado": "Ella es una persona susceptible",
+      "alternativas": {
+        "A": "dócil",
+        "B": "cordial",
+        "C": "sensible",
+        "D": "amable",
+        "E": "crédula"
+      },
+      "respuesta": "sensible",
+      "clave": "C"
+    },
+    {
+      "numero": 2,
+      "seccion": "Verbal",
+      "tema": "Sinonimia Contextual",
+      "enunciado": "El zorro, el león y la tortuga son animales que sugieren las connotaciones",
+      "alternativas": {
+        "A": "traición-peligro-amabilidad",
+        "B": "distracción-elegancia-certeza",
+        "C": "peligro-asesino-seguridad",
+        "D": "alegría-sagacidad-astucia",
+        "E": "astucia-valentía-lentitud"
+      },
+      "respuesta": "astucia-valentía-lentitud",
+      "clave": "E"
+    },
+    {
+      "numero": 3,
+      "seccion": "Verbal",
+      "tema": "Antonimia Contextual",
+      "enunciado": "Quienes aman la noche dicen que no hay mejor momento para la serenidad y la reflexión",
+      "alternativas": {
+        "A": "aborrecen-parsimonia-deliberación",
+        "B": "adoran-tranquilidad-contemplación",
+        "C": "detestan-desesperanza-insensibilidad",
+        "D": "odian-preocupación-insensatez",
+        "E": "condenan-impavidez-cordura"
+      },
+      "respuesta": "odian-preocupación-insensatez",
+      "clave": "D"
+    },
+    {
+      "numero": 4,
+      "seccion": "Verbal",
+      "tema": "Sinonimia Contextual",
+      "enunciado": "Era un poeta bucólico",
+      "alternativas": {
+        "A": "pastoril",
+        "B": "melancólico",
+        "C": "confundido",
+        "D": "bullicioso"
+      },
+      "respuesta": "pastoril",
+      "clave": "A"
+    },
+    {
+      "numero": 5,
+      "seccion": "Verbal",
+      "tema": "Comprensión Lectora",
+      "enunciado": "Según el 35% de encuestados, los matrimonios fracasan porque",
+      "alternativas": {
+        "A": "los problemas de comunicación impiden la solución de los conflictos",
+        "B": "no saben respetar los acuerdos de pareja",
+        "C": "pierden tiempo viendo televisión",
+        "D": "la plata no alcanza",
+        "E": "la rutina los embarga"
+      },
+      "respuesta": "los problemas de comunicación impiden la solución de los conflictos",
+      "clave": "A"
+    },
+    {
+      "numero": 6,
+      "seccion": "Verbal",
+      "tema": "Comprensión Lectora",
+      "enunciado": "El estrés se define como",
+      "alternativas": {
+        "A": "el conjunto de preocupaciones que apaciguan la vida",
+        "B": "un cuadro de irritabilidad y desgano que se desarrolla en cualquier medio",
+        "C": "el estado de desaliento que afecta sólo a las mujeres",
+        "D": "una inestabilidad emocional que siempre desemboca en la agresividad",
+        "E": "un preámbulo de adulterio"
+      },
+      "respuesta": "un cuadro de irritabilidad y desgano que se desarrolla en cualquier medio",
+      "clave": "B"
+    },
+    {
+      "numero": 7,
+      "seccion": "Verbal",
+      "tema": "Comprensión Lectora",
+      "enunciado": "En la encuesta hecha por el Instituto 'Market' se llegó a la conclusión de que el factor más importante del fracaso matrimonial es",
+      "alternativas": {
+        "A": "la incomunicación",
+        "B": "la crisis económica",
+        "C": "la infidelidad",
+        "D": "el estrés",
+        "E": "el desamor"
+      },
+      "respuesta": "el estrés",
+      "clave": "D"
+    },
+    {
+      "numero": 8,
+      "seccion": "Verbal",
+      "tema": "Comprensión Lectora",
+      "enunciado": "El título más apropiado para el texto es",
+      "alternativas": {
+        "A": "el espacio y las naves espaciales",
+        "B": "la exploración espacial",
+        "C": "la ciencia y los viajes espaciales",
+        "D": "explorando la luna",
+        "E": "el transbordador espacial"
+      },
+      "respuesta": "la ciencia y los viajes espaciales",
+      "clave": "C"
+    },
+    {
+      "numero": 9,
+      "seccion": "Verbal",
+      "tema": "Comprensión Lectora",
+      "enunciado": "La idea básica del texto es",
+      "alternativas": {
+        "A": "los cohetes laterales del transbordador espacial son recuperables",
+        "B": "la primera persona en el espacio fue un soviético",
+        "C": "el hombre pronto conquistará todos los planetas del sistema solar",
+        "D": "el astronauta está protegido de la radiación y meteoritos",
+        "E": "el ambiente artificial es un logro científico que le permite al hombre la sobrevivencia en el espacio"
+      },
+      "respuesta": "el ambiente artificial es un logro científico que le permite al hombre la sobrevivencia en el espacio",
+      "clave": "E"
+    },
+    {
+      "numero": 10,
+      "seccion": "Verbal",
+      "tema": "Comprensión Lectora",
+      "enunciado": "Según el texto, es correcta",
+      "alternativas": {
+        "A": "el transbordador espacial norteamericano es una nave recuperable",
+        "B": "Gagarin completó una órbita de Marte en el Vostok 1",
+        "C": "el vehículo orbital del transbordador norteamericano se pierde en cada misión",
+        "D": "el medio natural le da al astronauta la presión adecuada",
+        "E": "el sistema portátil de emergencia se conecta al vehículo espacial"
+      },
+      "respuesta": "el transbordador espacial norteamericano es una nave recuperable",
+      "clave": "A"
+    },
+    {
+      "numero": 11,
+      "seccion": "Verbal",
+      "tema": "Comprensión Lectora",
+      "enunciado": "Una idea compatible con el texto es",
+      "alternativas": {
+        "A": "la gratuidad es importante en la vida del hombre",
+        "B": "aprender a vivir es aprender a gozar",
+        "C": "la generosidad y no el egoísmo debe primar en el hombre",
+        "D": "las almas nobles deben buscar su propia satisfacción",
+        "E": "el gozo personal es primordial en el virtuoso"
+      },
+      "respuesta": "la gratitud es importante en la vida del hombre",
+      "clave": "A"
+    },
+    {
+      "numero": 12,
+      "seccion": "Verbal",
+      "tema": "Comprensión Lectora",
+      "enunciado": "De acuerdo con el texto, la LSP es",
+      "alternativas": {
+        "A": "análoga a cualquier gramática",
+        "B": "similar a la escritura",
+        "C": "análoga a la variedad formal",
+        "D": "distinta a otra gramática",
+        "E": "opuesta a la jerga"
+      },
+      "respuesta": "distinta a otra gramática",
+      "clave": "D"
+    },
+    {
+      "numero": 13,
+      "seccion": "Verbal",
+      "tema": "Tildación de Palabras",
+      "enunciado": "La palabra YAPE es",
+      "alternativas": {
+        "A": "aguda sin tilde",
+        "B": "aguda con acento en la penúltima sílaba",
+        "C": "aguda que no lleva tilde por ser mayúscula",
+        "D": "paroxítona, según regla no lleva tilde",
+        "E": "grave, según regla no debe llevar acento"
+      },
+      "respuesta": "paroxítona, según regla no lleva tilde",
+      "clave": "D"
+    },
+    {
+      "numero": 14,
+      "seccion": "Verbal",
+      "tema": "Comprensión Lectora",
+      "enunciado": "El escritor es",
+      "alternativas": {
+        "A": "creador de un mundo",
+        "B": "observador experimentado",
+        "C": "recreador de su realidad",
+        "D": "observador de la gente",
+        "E": "creador de personajes"
+      },
+      "respuesta": "recreador de su realidad",
+      "clave": "C"
+    },
+    {
+      "numero": 15,
+      "seccion": "Verbal",
+      "tema": "Comprensión Lectora",
+      "enunciado": "Entre el escritor y la realidad",
+      "alternativas": {
+        "A": "existe una relación",
+        "B": "se produce el arte",
+        "C": "existe una dependencia",
+        "D": "hay un interés y argumento",
+        "E": "existe independencia"
+      },
+      "respuesta": "existe una dependencia",
+      "clave": "C"
+    },
+    {
+      "numero": 16,
+      "seccion": "Matematica",
+      "tema": "Planteo de Ecuaciones",
+      "enunciado": "Dos kilómetros de manzanas contienen entre 25 y 35 manzanas... ¿Cuánto dinero en soles le darán para la compra de 140 manzanas?",
+      "alternativas": {
+        "A": "12",
+        "B": "6",
+        "C": "8",
+        "D": "9",
+        "E": "3"
+      },
+      "respuesta": "12",
+      "clave": "A"
+    },
+    {
+      "numero": 17,
+      "seccion": "Matematica",
+      "tema": "Máximos y Mínimos",
+      "enunciado": "Christian y Fabrizio están ubicados en el punto V... ¿Cuál es el valor del recorrido mínimo?",
+      "alternativas": {
+        "A": "15 km",
+        "B": "(3+√180) km",
+        "C": "9√5 km",
+        "D": "(6+√135) km",
+        "E": "21 km"
+      },
+      "respuesta": "15 km",
+      "clave": "A"
+    },
+    {
+      "numero": 18,
+      "seccion": "Matematica",
+      "tema": "Cronometría",
+      "enunciado": "¿A qué hora de la mañana el tiempo que marca el reloj es igual a 5/4 de lo que falta para las 12 m?",
+      "alternativas": {
+        "A": "10:20",
+        "B": "6:40",
+        "C": "9:00",
+        "D": "8:15",
+        "E": "11:45"
+      },
+      "respuesta": "6h 40 min",
+      "clave": "B"
+    },
+    {
+      "numero": 19,
+      "seccion": "Matematica",
+      "tema": "Certezas",
+      "enunciado": "Estefani tiene en una caja oscura 4 pares de botas negras, 5 rojas, 3 marrones y 5 blancas. ¿Cuántas botas debe extraer para tener la certeza de tener un par útil?",
+      "alternativas": {
+        "A": "10",
+        "B": "14",
+        "C": "12",
+        "D": "18",
+        "E": "17"
+      },
+      "respuesta": "18",
+      "clave": "D"
+    },
+    {
+      "numero": 20,
+      "seccion": "Matematica",
+      "tema": "Planteo de Ecuaciones",
+      "enunciado": "Alameda de 400 m: postes cada 25 m en una acera y cada 40 m en la otra. ¿Cuántos postes se usaron?",
+      "alternativas": {
+        "A": "26",
+        "B": "27",
+        "C": "28",
+        "D": "29",
+        "E": "30"
+      },
+      "respuesta": "28",
+      "clave": "C"
+    },
+    {
+      "numero": 21,
+      "seccion": "Matematica",
+      "tema": "Conteo de Figuras",
+      "enunciado": "¿Cuántos triángulos (T) y cuadriláteros (C) hay en la figura rectangular dividida?",
+      "alternativas": {
+        "A": "T=10; C=6",
+        "B": "T=10; C=10",
+        "C": "T=12; C=10",
+        "D": "T=12; C=12",
+        "E": "T=12; C=6"
+      },
+      "respuesta": "T=12; C=12",
+      "clave": "D"
+    },
+    {
+      "numero": 22,
+      "seccion": "Matematica",
+      "tema": "Situaciones Lógicas",
+      "enunciado": "Ana gana si saca número impar, Hugo gana si saca par no primo (excepto 2). La afirmación correcta es",
+      "alternativas": {
+        "A": "Las reglas acordadas favorecen a Hugo",
+        "B": "Las reglas acordadas favorecen a Ana",
+        "C": "Hugo gana cada vez que saca un 2",
+        "D": "Ana gana si saca un 4",
+        "E": "Hugo pierde si saca un 3"
+      },
+      "respuesta": "Hugo pierde si saca un 3",
+      "clave": "E"
+    },
+    {
+      "numero": 23,
+      "seccion": "Matematica",
+      "tema": "Planteo de Ecuaciones",
+      "enunciado": "En una fiesta con 50 personas: la 1° dama baila con 7 caballeros, la 2° con 8, la 3° con 9... ¿Cuántos caballeros asistieron?",
+      "alternativas": {
+        "A": "22",
+        "B": "23",
+        "C": "24",
+        "D": "28",
+        "E": "30"
+      },
+      "respuesta": "28",
+      "clave": "D"
+    },
+    {
+      "numero": 24,
+      "seccion": "Matematica",
+      "tema": "Áreas y Perímetros",
+      "enunciado": "¿Cuál es el valor del perímetro de las áreas verdes (regiones sombreadas) del parque?",
+      "alternativas": {
+        "A": "800 m",
+        "B": "1000√2 m",
+        "C": "100(2+√2) m",
+        "D": "600(2+√2) m",
+        "E": "800(2+√2) m"
+      },
+      "respuesta": "800(2+√2) m",
+      "clave": "E"
+    },
+    {
+      "numero": 25,
+      "seccion": "Matematica",
+      "tema": "Cronometría",
+      "enunciado": "Si el 12 de mayo del 2024 es domingo, ¿qué día será el 12 de mayo del 2028?",
+      "alternativas": {
+        "A": "lunes",
+        "B": "martes",
+        "C": "miércoles",
+        "D": "jueves",
+        "E": "viernes"
+      },
+      "respuesta": "viernes",
+      "clave": "E"
+    },
+    {
+      "numero": 26,
+      "seccion": "Matematica",
+      "tema": "Variaciones Porcentuales",
+      "enunciado": "El largo de un rectángulo excede a su ancho en 7 m. Si cada dimensión se incrementa en 4 m, el área aumenta 60 m². Determina el largo.",
+      "alternativas": {
+        "A": "5",
+        "B": "6",
+        "C": "7",
+        "D": "8",
+        "E": "9"
+      },
+      "respuesta": "9",
+      "clave": "E"
+    },
+    {
+      "numero": 27,
+      "seccion": "Matematica",
+      "tema": "Conteo de Figuras",
+      "enunciado": "¿Cuántos triángulos hay en la figura dada?",
+      "alternativas": {
+        "A": "35",
+        "B": "48",
+        "C": "26",
+        "D": "14",
+        "E": "42"
+      },
+      "respuesta": "48",
+      "clave": "B"
+    },
+    {
+      "numero": 28,
+      "seccion": "Matematica",
+      "tema": "Leyes de Inferencias Lógicas",
+      "enunciado": "Determine la conclusión: P1: (p∧q)→r, P2: ~r",
+      "alternativas": {
+        "A": "p",
+        "B": "~p∨~q",
+        "C": "q",
+        "D": "~p∧r",
+        "E": "~p∧~q"
+      },
+      "respuesta": "~p∨~q",
+      "clave": "B"
+    },
+    {
+      "numero": 29,
+      "seccion": "Matematica",
+      "tema": "Áreas y Perímetros",
+      "enunciado": "El área de la región sombreada es 4(4-π). Determine el perímetro de la circunferencia.",
+      "alternativas": {
+        "A": "4π",
+        "B": "2π",
+        "C": "16π",
+        "D": "π",
+        "E": "3π"
+      },
+      "respuesta": "4π",
+      "clave": "A"
+    },
+    {
+      "numero": 30,
+      "seccion": "Matematica",
+      "tema": "Edades",
+      "enunciado": "La suma de edades de una pareja cuando nació su hijo era la mitad de la suma actual de los 3. El hijo tiene 16 años. ¿Qué edad tenía cuando la suma de los 3 era 66?",
+      "alternativas": {
+        "A": "6",
+        "B": "10",
+        "C": "12",
+        "D": "14",
+        "E": "8"
+      },
+      "respuesta": "6",
+      "clave": "A"
+    }
+  ]
+}

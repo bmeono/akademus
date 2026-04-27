@@ -1,0 +1,181 @@
+{
+  "grupos_academicos": [
+    "CIENCIA POLITICA Y DERECHOS",
+    "CIENCIAS ECONÓMICAS",
+    "CIENCIAS SOCIALES",
+    "CIENCIAS E INGENIERIAS",
+    "INGENIERIAS AGROPECUARIAS"
+  ],
+  "asignaturas": [
+    {
+      "nombre": "Verbal",
+      "datos": {
+        "CIENCIA POLITICA Y DERECHOS": { "numero_preguntas": 20, "puntaje_por_pregunta": 20 },
+        "CIENCIAS ECONÓMICAS": { "numero_preguntas": 20, "puntaje_por_pregunta": 20 },
+        "CIENCIAS SOCIALES": { "numero_preguntas": 20, "puntaje_por_pregunta": 10 },
+        "CIENCIAS E INGENIERIAS": { "numero_preguntas": 20, "puntaje_por_pregunta": 20 },
+        "INGENIERIAS AGROPECUARIAS": { "numero_preguntas": 20, "puntaje_por_pregunta": 20 }
+      }
+    },
+    {
+      "nombre": "Matemática",
+      "datos": {
+        "CIENCIA POLITICA Y DERECHOS": { "numero_preguntas": 20, "puntaje_por_pregunta": 20 },
+        "CIENCIAS ECONÓMICAS": { "numero_preguntas": 20, "puntaje_por_pregunta": 20 },
+        "CIENCIAS SOCIALES": { "numero_preguntas": 20, "puntaje_por_pregunta": 20 },
+        "CIENCIAS E INGENIERIAS": { "numero_preguntas": 20, "puntaje_por_pregunta": 20 },
+        "INGENIERIAS AGROPECUARIAS": { "numero_preguntas": 20, "puntaje_por_pregunta": 20 }
+      }
+    },
+    {
+      "nombre": "Aritmetica",
+      "datos": {
+        "CIENCIA POLITICA Y DERECHOS": { "numero_preguntas": 5, "puntaje_por_pregunta": 16.0012 },
+        "CIENCIAS ECONÓMICAS": { "numero_preguntas": 5, "puntaje_por_pregunta": 16.0012 },
+        "CIENCIAS SOCIALES": { "numero_preguntas": 5, "puntaje_por_pregunta": 16.0012 },
+        "CIENCIAS E INGENIERIAS": { "numero_preguntas": 6, "puntaje_por_pregunta": 22.222 },
+        "INGENIERIAS AGROPECUARIAS": { "numero_preguntas": 6, "puntaje_por_pregunta": 22.222 }
+      }
+    },
+    {
+      "nombre": "Geometría",
+      "datos": {
+        "CIENCIA POLITICA Y DERECHOS": { "numero_preguntas": 3, "puntaje_por_pregunta": 16.0012 },
+        "CIENCIAS ECONÓMICAS": { "numero_preguntas": 3, "puntaje_por_pregunta": 16.0012 },
+        "CIENCIAS SOCIALES": { "numero_preguntas": 3, "puntaje_por_pregunta": 16.0012 },
+        "CIENCIAS E INGENIERIAS": { "numero_preguntas": 6, "puntaje_por_pregunta": 22.222 },
+        "INGENIERIAS AGROPECUARIAS": { "numero_preguntas": 6, "puntaje_por_pregunta": 22.222 }
+      }
+    },
+    {
+      "nombre": "Álgebra",
+      "datos": {
+        "CIENCIA POLITICA Y DERECHOS": { "numero_preguntas": 4, "puntaje_por_pregunta": 16.0012 },
+        "CIENCIAS ECONÓMICAS": { "numero_preguntas": 4, "puntaje_por_pregunta": 16.0012 },
+        "CIENCIAS SOCIALES": { "numero_preguntas": 4, "puntaje_por_pregunta": 16.0012 },
+        "CIENCIAS E INGENIERIAS": { "numero_preguntas": 6, "puntaje_por_pregunta": 22.222 },
+        "INGENIERIAS AGROPECUARIAS": { "numero_preguntas": 6, "puntaje_por_pregunta": 22.222 }
+      }
+    },
+    {
+      "nombre": "Trigonometria",
+      "datos": {
+        "CIENCIA POLITICA Y DERECHOS": { "numero_preguntas": 3, "puntaje_por_pregunta": 16.0012 },
+        "CIENCIAS ECONÓMICAS": { "numero_preguntas": 3, "puntaje_por_pregunta": 16.0012 },
+        "CIENCIAS SOCIALES": { "numero_preguntas": 3, "puntaje_por_pregunta": 16.0012 },
+        "CIENCIAS E INGENIERIAS": { "numero_preguntas": 6, "puntaje_por_pregunta": 22.222 },
+        "INGENIERIAS AGROPECUARIAS": { "numero_preguntas": 6, "puntaje_por_pregunta": 22.222 }
+      }
+    },
+    {
+      "nombre": "Lenguaje",
+      "datos": {
+        "CIENCIA POLITICA Y DERECHOS": { "numero_preguntas": 6, "puntaje_por_pregunta": 23.529 },
+        "CIENCIAS ECONÓMICAS": { "numero_preguntas": 6, "puntaje_por_pregunta": 23.529 },
+        "CIENCIAS SOCIALES": { "numero_preguntas": 6, "puntaje_por_pregunta": 23.529 },
+        "CIENCIAS E INGENIERIAS": { "numero_preguntas": 4, "puntaje_por_pregunta": 17.631 },
+        "INGENIERIAS AGROPECUARIAS": { "numero_preguntas": 4, "puntaje_por_pregunta": 17.631 }
+      }
+    },
+    {
+      "nombre": "Literatura",
+      "datos": {
+        "CIENCIA POLITICA Y DERECHOS": { "numero_preguntas": 6, "puntaje_por_pregunta": 23.529 },
+        "CIENCIAS ECONÓMICAS": { "numero_preguntas": 6, "puntaje_por_pregunta": 23.529 },
+        "CIENCIAS SOCIALES": { "numero_preguntas": 6, "puntaje_por_pregunta": 23.529 },
+        "CIENCIAS E INGENIERIAS": { "numero_preguntas": 2, "puntaje_por_pregunta": 17.631 },
+        "INGENIERIAS AGROPECUARIAS": { "numero_preguntas": 2, "puntaje_por_pregunta": 17.631 }
+      }
+    },
+    {
+      "nombre": "Psicología",
+      "datos": {
+        "CIENCIA POLITICA Y DERECHOS": { "numero_preguntas": 3, "puntaje_por_pregunta": 23.529 },
+        "CIENCIAS ECONÓMICAS": { "numero_preguntas": 3, "puntaje_por_pregunta": 23.529 },
+        "CIENCIAS SOCIALES": { "numero_preguntas": 3, "puntaje_por_pregunta": 23.529 },
+        "CIENCIAS E INGENIERIAS": { "numero_preguntas": 2, "puntaje_por_pregunta": 17.631 },
+        "INGENIERIAS AGROPECUARIAS": { "numero_preguntas": 2, "puntaje_por_pregunta": 17.631 }
+      }
+    },
+    {
+      "nombre": "Educación Cívica",
+      "datos": {
+        "CIENCIA POLITICA Y DERECHOS": { "numero_preguntas": 3, "puntaje_por_pregunta": 23.529 },
+        "CIENCIAS ECONÓMICAS": { "numero_preguntas": 3, "puntaje_por_pregunta": 23.529 },
+        "CIENCIAS SOCIALES": { "numero_preguntas": 3, "puntaje_por_pregunta": 23.529 },
+        "CIENCIAS E INGENIERIAS": { "numero_preguntas": 2, "puntaje_por_pregunta": 17.631 },
+        "INGENIERIAS AGROPECUARIAS": { "numero_preguntas": 2, "puntaje_por_pregunta": 17.631 }
+      }
+    },
+    {
+      "nombre": "Historia del Perú y Universal",
+      "datos": {
+        "CIENCIA POLITICA Y DERECHOS": { "numero_preguntas": 5, "puntaje_por_pregunta": 23.529 },
+        "CIENCIAS ECONÓMICAS": { "numero_preguntas": 5, "puntaje_por_pregunta": 23.529 },
+        "CIENCIAS SOCIALES": { "numero_preguntas": 5, "puntaje_por_pregunta": 23.529 },
+        "CIENCIAS E INGENIERIAS": { "numero_preguntas": 2, "puntaje_por_pregunta": 17.631 },
+        "INGENIERIAS AGROPECUARIAS": { "numero_preguntas": 2, "puntaje_por_pregunta": 17.631 }
+      }
+    },
+    {
+      "nombre": "Geografía",
+      "datos": {
+        "CIENCIA POLITICA Y DERECHOS": { "numero_preguntas": 2, "puntaje_por_pregunta": 23.529 },
+        "CIENCIAS ECONÓMICAS": { "numero_preguntas": 2, "puntaje_por_pregunta": 23.529 },
+        "CIENCIAS SOCIALES": { "numero_preguntas": 2, "puntaje_por_pregunta": 23.529 },
+        "CIENCIAS E INGENIERIAS": { "numero_preguntas": 2, "puntaje_por_pregunta": 17.631 },
+        "INGENIERIAS AGROPECUARIAS": { "numero_preguntas": 2, "puntaje_por_pregunta": 17.631 }
+      }
+    },
+    {
+      "nombre": "Economía",
+      "datos": {
+        "CIENCIA POLITICA Y DERECHOS": { "numero_preguntas": 5, "puntaje_por_pregunta": 23.529 },
+        "CIENCIAS ECONÓMICAS": { "numero_preguntas": 5, "puntaje_por_pregunta": 23.529 },
+        "CIENCIAS SOCIALES": { "numero_preguntas": 5, "puntaje_por_pregunta": 23.529 },
+        "CIENCIAS E INGENIERIAS": { "numero_preguntas": 3, "puntaje_por_pregunta": 17.631 },
+        "INGENIERIAS AGROPECUARIAS": { "numero_preguntas": 3, "puntaje_por_pregunta": 17.631 }
+      }
+    },
+    {
+      "nombre": "Filosofía",
+      "datos": {
+        "CIENCIA POLITICA Y DERECHOS": { "numero_preguntas": 4, "puntaje_por_pregunta": 23.529 },
+        "CIENCIAS ECONÓMICAS": { "numero_preguntas": 4, "puntaje_por_pregunta": 23.529 },
+        "CIENCIAS SOCIALES": { "numero_preguntas": 4, "puntaje_por_pregunta": 23.529 },
+        "CIENCIAS E INGENIERIAS": { "numero_preguntas": 2, "puntaje_por_pregunta": 17.631 },
+        "INGENIERIAS AGROPECUARIAS": { "numero_preguntas": 2, "puntaje_por_pregunta": 17.631 }
+      }
+    },
+    {
+      "nombre": "Física",
+      "datos": {
+        "CIENCIA POLITICA Y DERECHOS": { "numero_preguntas": 3, "puntaje_por_pregunta": 14.545 },
+        "CIENCIAS ECONÓMICAS": { "numero_preguntas": 3, "puntaje_por_pregunta": 14.545 },
+        "CIENCIAS SOCIALES": { "numero_preguntas": 3, "puntaje_por_pregunta": 14.545 },
+        "CIENCIAS E INGENIERIAS": { "numero_preguntas": 6, "puntaje_por_pregunta": 22.222 },
+        "INGENIERIAS AGROPECUARIAS": { "numero_preguntas": 6, "puntaje_por_pregunta": 22.222 }
+      }
+    },
+    {
+      "nombre": "Química",
+      "datos": {
+        "CIENCIA POLITICA Y DERECHOS": { "numero_preguntas": 3, "puntaje_por_pregunta": 14.545 },
+        "CIENCIAS ECONÓMICAS": { "numero_preguntas": 3, "puntaje_por_pregunta": 14.545 },
+        "CIENCIAS SOCIALES": { "numero_preguntas": 3, "puntaje_por_pregunta": 14.545 },
+        "CIENCIAS E INGENIERIAS": { "numero_preguntas": 6, "puntaje_por_pregunta": 22.222 },
+        "INGENIERIAS AGROPECUARIAS": { "numero_preguntas": 6, "puntaje_por_pregunta": 22.222 }
+      }
+    },
+    {
+      "nombre": "Biología",
+      "datos": {
+        "CIENCIA POLITICA Y DERECHOS": { "numero_preguntas": 5, "puntaje_por_pregunta": 14.545 },
+        "CIENCIAS ECONÓMICAS": { "numero_preguntas": 5, "puntaje_por_pregunta": 14.545 },
+        "CIENCIAS SOCIALES": { "numero_preguntas": 5, "puntaje_por_pregunta": 14.545 },
+        "CIENCIAS E INGENIERIAS": { "numero_preguntas": 5, "puntaje_por_pregunta": 13.0038 },
+        "INGENIERIAS AGROPECUARIAS": { "numero_preguntas": 5, "puntaje_por_pregunta": 13.0038 }
+      }
+    }
+  ]
+}

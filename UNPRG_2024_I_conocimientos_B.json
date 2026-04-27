@@ -1,0 +1,704 @@
+{
+  "preguntas": [
+    {
+      "numero": 31,
+      "seccion": "Conocimientos",
+      "subseccion": "Álgebra",
+      "tema": "Logaritmos",
+      "enunciado": "Si M(x) = e^(-x) + e^(-2x) + e^(-3x) + e^(-4x) + ... Para x>0, halle M(Ln3)",
+      "alternativas": {"A": "3", "B": "1/2", "C": "1/3", "D": "2", "E": "-1/2"},
+      "respuesta": "1/2",
+      "clave": "B"
+    },
+    {
+      "numero": 32,
+      "seccion": "Conocimientos",
+      "subseccion": "Aritmética",
+      "tema": "MCD y MCM",
+      "enunciado": "Si al aplicar el algoritmo de Euclides, el máximo común divisor de dos números es 48 y los cocientes son 1, 3 y 2 respectivamente. Determine la suma de dichos números.",
+      "alternativas": {"A": "798", "B": "768", "C": "896", "D": "698", "E": "978"},
+      "respuesta": "768",
+      "clave": "B"
+    },
+    {
+      "numero": 33,
+      "seccion": "Conocimientos",
+      "subseccion": "Aritmética",
+      "tema": "Números Racionales",
+      "enunciado": "Si 0,230(5) = 0,xyx. Determine el valor de x + y",
+      "alternativas": {"A": "5", "B": "7", "C": "9", "D": "6", "E": "8"},
+      "respuesta": "7",
+      "clave": "B"
+    },
+    {
+      "numero": 34,
+      "seccion": "Conocimientos",
+      "subseccion": "Aritmética",
+      "tema": "Números Primos",
+      "enunciado": "Si 16^n tiene 'p' divisores, entonces, el número de divisores que tiene 256^n es",
+      "alternativas": {"A": "4p+1", "B": "4p-1", "C": "2p+1", "D": "2p-1", "E": "8p"},
+      "respuesta": "2p-1",
+      "clave": "D"
+    },
+    {
+      "numero": 35,
+      "seccion": "Conocimientos",
+      "subseccion": "Geometría",
+      "tema": "Parábola",
+      "enunciado": "Dada una parábola con vértice (1,-1) cuyo eje focal es paralelo al eje X. Determine la ecuación si la distancia del vértice al foco es 2 y su directriz es x=-1",
+      "alternativas": {"A": "(y-1)²=4(x-1)", "B": "(y+1)²=4(x+1)", "C": "(y+1)²=8(x+1)", "D": "(y+1)²=8(x-1)", "E": "(y-1)²=8(x-1)"},
+      "respuesta": "(y+1)²=8(x-1)",
+      "clave": "D"
+    },
+    {
+      "numero": 36,
+      "seccion": "Conocimientos",
+      "subseccion": "Geometría",
+      "tema": "Líneas y puntos notables en el triángulo",
+      "enunciado": "Dado un triángulo rectángulo ABC y una bisectriz AD del ángulo agudo A tal que BD=8m y CD=10m. Calcular la medida del cateto AB.",
+      "alternativas": {"A": "4", "B": "14", "C": "24", "D": "34", "E": "44"},
+      "respuesta": "24",
+      "clave": "C"
+    },
+    {
+      "numero": 37,
+      "seccion": "Conocimientos",
+      "subseccion": "Geometría",
+      "tema": "Relaciones métricas en la circunferencia",
+      "enunciado": "Dada una circunferencia de diámetro AB y MH perpendicular a AB, con radio 10m y OH=8m. Calcular MH.",
+      "alternativas": {"A": "6", "B": "9", "C": "12", "D": "15", "E": "18"},
+      "respuesta": "6",
+      "clave": "B"
+    },
+    {
+      "numero": 38,
+      "seccion": "Conocimientos",
+      "subseccion": "Geometría",
+      "tema": "Tronco de Prisma",
+      "enunciado": "Calcular el volumen de un prisma oblicuo ABC-A'B'C' cuya área de la sección recta MNP es 6m² y sus aristas laterales miden AA'=2m, BB'=3m y CC'=4m",
+      "alternativas": {"A": "12 m³", "B": "14 m³", "C": "16 m³", "D": "18 m³", "E": "20 m³"},
+      "respuesta": "18 m³",
+      "clave": "D"
+    },
+    {
+      "numero": 39,
+      "seccion": "Conocimientos",
+      "subseccion": "Álgebra",
+      "tema": "Factorización",
+      "enunciado": "Al factorizar P(x,y) = x⁶y⁴ - x²y² - x⁴y² + 1, el número de factores primos lineales es:",
+      "alternativas": {"A": "0", "B": "1", "C": "2", "D": "3", "E": "4"},
+      "respuesta": "0",
+      "clave": "A"
+    },
+    {
+      "numero": 40,
+      "seccion": "Conocimientos",
+      "subseccion": "Álgebra",
+      "tema": "Factorización",
+      "enunciado": "Al factorizar P(x,y) = x^10 + 2x^6 + x² - 1, el número de factores primos cuadráticos es:",
+      "alternativas": {"A": "1", "B": "2", "C": "3", "D": "4", "E": "5"},
+      "respuesta": "2",
+      "clave": "B"
+    },
+    {
+      "numero": 41,
+      "seccion": "Conocimientos",
+      "subseccion": "Álgebra",
+      "tema": "Planteo de Ecuaciones",
+      "enunciado": "Un camino de cemento de anchura constante rodea una alberca de 20m x 40m. El área total es 1500m². Determine la anchura del camino.",
+      "alternativas": {"A": "4", "B": "5", "C": "6", "D": "8", "E": "10"},
+      "respuesta": "5",
+      "clave": "B"
+    },
+    {
+      "numero": 42,
+      "seccion": "Conocimientos",
+      "subseccion": "Álgebra",
+      "tema": "Radicación",
+      "enunciado": "Calcular B = [²⁴√(5+2√6) · ⁴√(5-2√6) · ⁸√(5+2√6)] / ¹²√(5-2√6)",
+      "alternativas": {"A": "1", "B": "2", "C": "√2", "D": "3", "E": "√3"},
+      "respuesta": "1",
+      "clave": "A"
+    },
+    {
+      "numero": 43,
+      "seccion": "Conocimientos",
+      "subseccion": "Trigonometría",
+      "tema": "Ángulos Verticales",
+      "enunciado": "Desde la orilla de un río se observa el punto más alto de un árbol con ángulo de elevación de 45°. Si retrocede 10m se ve con 30°. Calcule la altura del árbol.",
+      "alternativas": {"A": "4(√3+1) m", "B": "4√3 m", "C": "(4+√3) m", "D": "5(√2+1) m", "E": "5(√3+1) m"},
+      "respuesta": "5(√3+1) m",
+      "clave": "E"
+    },
+    {
+      "numero": 44,
+      "seccion": "Conocimientos",
+      "subseccion": "Trigonometría",
+      "tema": "Funciones Trigonométricas",
+      "enunciado": "Determina el rango de la función f(x) = 2 - sen²x",
+      "alternativas": {"A": "[1,2]", "B": "[0,1]", "C": "[-1,1]", "D": "[1,3]", "E": "[2,3]"},
+      "respuesta": "[1,2]",
+      "clave": "A"
+    },
+    {
+      "numero": 45,
+      "seccion": "Conocimientos",
+      "subseccion": "Trigonometría",
+      "tema": "Transformaciones Trigonométricas",
+      "enunciado": "Después de simplificar M = cos6x·cosx + sen5x·sen2x, se obtiene",
+      "alternativas": {"A": "cosx·sen3x", "B": "sen3x·cos4x", "C": "cos3x·cos4x", "D": "cosx·cos4x", "E": "cosx·cos3x"},
+      "respuesta": "cos4x·cosx",
+      "clave": "D"
+    },
+    {
+      "numero": 46,
+      "seccion": "Conocimientos",
+      "subseccion": "Trigonometría",
+      "tema": "Funciones Trigonométricas",
+      "enunciado": "Determine el máximo valor de la función real f(x) = senx + cosx",
+      "alternativas": {"A": "2", "B": "√2", "C": "√2+1", "D": "1", "E": "√2-1"},
+      "respuesta": "√2",
+      "clave": "B"
+    },
+    {
+      "numero": 47,
+      "seccion": "Conocimientos",
+      "subseccion": "Lenguaje",
+      "tema": "Signos de Puntuación",
+      "enunciado": "Platero es tierno y mimoso igual que un niño que una niña pero fuerte y seco como la piedra. Se aplica el punto y coma después de la palabra:",
+      "alternativas": {"A": "Tierno", "B": "Mimoso", "C": "Niño", "D": "Pero", "E": "niña"},
+      "respuesta": "niña",
+      "clave": "E"
+    },
+    {
+      "numero": 48,
+      "seccion": "Conocimientos",
+      "subseccion": "Lenguaje",
+      "tema": "Funciones del Lenguaje",
+      "enunciado": "El fragmento poético de Octavio Paz ('La luz no parpadea / El tiempo se vacía en minutos...') corresponde a la función del lenguaje:",
+      "alternativas": {"A": "Referencial", "B": "Emotiva", "C": "Conminativa", "D": "Poética", "E": "Fática"},
+      "respuesta": "Poética",
+      "clave": "D"
+    },
+    {
+      "numero": 49,
+      "seccion": "Conocimientos",
+      "subseccion": "Lenguaje",
+      "tema": "Tildación",
+      "enunciado": "La palabra _____________ no debe llevar tilde.",
+      "alternativas": {"A": "Llévatela", "B": "Ciempiés", "C": "Históricamente", "D": "Alicaído", "E": "sútilmente"},
+      "respuesta": "sutilmente",
+      "clave": "E"
+    },
+    {
+      "numero": 50,
+      "seccion": "Conocimientos",
+      "subseccion": "Lenguaje",
+      "tema": "El Sujeto",
+      "enunciado": "En la oración 'Una bella historia de amor acabou en matrimonio', el objeto indirecto del sujeto es:",
+      "alternativas": {"A": "Una", "B": "Bella", "C": "Una bella", "D": "De amor", "E": "de"},
+      "respuesta": "De amor",
+      "clave": "D"
+    },
+    {
+      "numero": 51,
+      "seccion": "Conocimientos",
+      "subseccion": "Literatura",
+      "tema": "Siglo de Oro Español",
+      "enunciado": "La evolución de la literatura en la Edad de Oro Española se inicia con el",
+      "alternativas": {"A": "Clasicismo", "B": "Barroco", "C": "Neoclasicismo", "D": "Renacimiento", "E": "Humanismo"},
+      "respuesta": "Renacimiento",
+      "clave": "D"
+    },
+    {
+      "numero": 52,
+      "seccion": "Conocimientos",
+      "subseccion": "Literatura",
+      "tema": "Ensayo Contemporáneo",
+      "enunciado": "Los Siete ensayos de interpretación de la realidad peruana es una obra que pertenece a:",
+      "alternativas": {"A": "José Santos Chocano", "B": "José Carlos Mariátegui", "C": "Abraham Valdelomar", "D": "César Vallejo", "E": "Gabriel García Márquez"},
+      "respuesta": "José Carlos Mariátegui",
+      "clave": "B"
+    },
+    {
+      "numero": 53,
+      "seccion": "Conocimientos",
+      "subseccion": "Psicología",
+      "tema": "Procesos Psicológicos Cognitivos",
+      "enunciado": "El proceso cognitivo que se produce por la acción de un estímulo por medio de la vista, oído, tacto, olfato, etc.",
+      "alternativas": {"A": "Percepción", "B": "Memoria", "C": "Inteligencia", "D": "Sensación", "E": "Alucinación"},
+      "respuesta": "Sensación",
+      "clave": "D"
+    },
+    {
+      "numero": 54,
+      "seccion": "Conocimientos",
+      "subseccion": "Psicología",
+      "tema": "La Psicología como Ciencia del Comportamiento Humano",
+      "enunciado": "No corresponde al estudio de la psicología como ciencia:",
+      "alternativas": {"A": "Observación", "B": "Experimentación", "C": "Intuición", "D": "Test", "E": "Encuesta"},
+      "respuesta": "Intuición",
+      "clave": "C"
+    },
+    {
+      "numero": 55,
+      "seccion": "Conocimientos",
+      "subseccion": "Psicología",
+      "tema": "Memoria",
+      "enunciado": "Fase muy importante donde es necesaria la atención y la percepción para luego reproducir la información con éxito:",
+      "alternativas": {"A": "Retención", "B": "Evocación", "C": "Reconocimiento", "D": "Fijación", "E": "Localización"},
+      "respuesta": "Fijación",
+      "clave": "D"
+    },
+    {
+      "numero": 56,
+      "seccion": "Conocimientos",
+      "subseccion": "Psicología",
+      "tema": "Desarrollo del Comportamiento Humano",
+      "enunciado": "Etapa en la cual la persona se enfrenta a una crisis de identificación y pertenencia a un grupo",
+      "alternativas": {"A": "Prenatal", "B": "Infancia", "C": "Adolescencia", "D": "Adultez temprana", "E": "Adultez tardía"},
+      "respuesta": "Adolescencia",
+      "clave": "C"
+    },
+    {
+      "numero": 57,
+      "seccion": "Conocimientos",
+      "subseccion": "Cívica",
+      "tema": "Los Derechos Humanos",
+      "enunciado": "No es un derecho de primera generación: El derecho a:",
+      "alternativas": {"A": "La vida e integridad física", "B": "La libre sindicación", "C": "La igualdad ante la ley", "D": "La libertad de conciencia y religión", "E": "La propiedad y a la herencia"},
+      "respuesta": "La propiedad y a la herencia",
+      "clave": "E"
+    },
+    {
+      "numero": 58,
+      "seccion": "Conocimientos",
+      "subseccion": "Cívica",
+      "tema": "La Constitución Política",
+      "enunciado": "Conjunto de dispositivos legales o ramazón jurídica que corresponde a la constitución.",
+      "alternativas": {"A": "Preámbulo", "B": "Cuerpo o texto", "C": "Declaración", "D": "Títulos", "E": "Capítulos"},
+      "respuesta": "Cuerpo o texto",
+      "clave": "B"
+    },
+    {
+      "numero": 59,
+      "seccion": "Conocimientos",
+      "subseccion": "Cívica",
+      "tema": "Organismos de Integración",
+      "enunciado": "Organismo internacional de integración subregional que busca el mejoramiento del nivel de vida de los habitantes de la subregión:",
+      "alternativas": {"A": "Organismo de Estados Americanos", "B": "Organismos de las Naciones Unidas", "C": "Consejo económico social", "D": "Tribunal Internacional de justicia", "E": "Comunidad Andina de Naciones"},
+      "respuesta": "Comunidad Andina de Naciones",
+      "clave": "E"
+    },
+    {
+      "numero": 60,
+      "seccion": "Conocimientos",
+      "subseccion": "Cívica",
+      "tema": "Garantías Constitucionales",
+      "enunciado": "Es la mayor garantía de aquellos sistemas políticos que funcionan en base a la seguridad jurídica y a la credibilidad de las normas:",
+      "alternativas": {"A": "Congreso de la Republica", "B": "Gobierno Local", "C": "Gobierno Regional", "D": "La FIFA", "E": "La Constitución Política del Perú"},
+      "respuesta": "La Constitución Política del Perú",
+      "clave": "E"
+    },
+    {
+      "numero": 61,
+      "seccion": "Conocimientos",
+      "subseccion": "Historia",
+      "tema": "Guerra Fría",
+      "enunciado": "El fin de la guerra fría se produce como consecuencia de:",
+      "alternativas": {"A": "La caída del bloque comunista", "B": "El surgimiento del mundo unipolar", "C": "La creación del estado israelí y el rechazo de los árabes", "D": "La revolución china", "E": "El origen del movimiento de Países no alineados"},
+      "respuesta": "La caída del bloque comunista",
+      "clave": "A"
+    },
+    {
+      "numero": 62,
+      "seccion": "Conocimientos",
+      "subseccion": "Historia",
+      "tema": "Proceso de la Independencia",
+      "enunciado": "La corriente libertadora del sur buscaba llegar al Perú porque:",
+      "alternativas": {"A": "El tribunal del consulado era el centro del desarrollo comercial en América", "B": "Toda su burguesía era fidelista", "C": "Era el núcleo del poder político y militar español", "D": "Tenía el apoyo de la burguesía limeña", "E": "Debía asegurar el libre comercio"},
+      "respuesta": "Era el núcleo del poder político y militar español",
+      "clave": "C"
+    },
+    {
+      "numero": 63,
+      "seccion": "Conocimientos",
+      "subseccion": "Historia",
+      "tema": "Revolución Industrial",
+      "enunciado": "En relación a las consecuencias sociales de la Revolución industrial, es incorrecta:",
+      "alternativas": {"A": "En los países industrializados se produjo el éxodo del campo a la ciudad", "B": "Surgimiento y protagonismo del proletariado y la burguesía", "C": "Desarrollo del movimiento obrero", "D": "El sistema capitalista se consolida como modelo dominante", "E": "Los niños fueron utilizados para el trabajo en las fábricas y minas"},
+      "respuesta": "El sistema capitalista se consolida como modelo dominante",
+      "clave": "D"
+    },
+    {
+      "numero": 64,
+      "seccion": "Conocimientos",
+      "subseccion": "Historia",
+      "tema": "Perú Republicano",
+      "enunciado": "En los primeros años de la República el cobro del tributo indígena, a pesar de haber sido anulado por San Martin, se mantenía debido a que:",
+      "alternativas": {"A": "No se había promulgado la ley de anulación del tributo", "B": "Existía rivalidades políticas internas", "C": "Era uno de los principales ingresos del estado", "D": "No se consideró en la capitulación de Ayacucho", "E": "Se produjo el primer militarismo"},
+      "respuesta": "Era uno de los principales ingresos del estado",
+      "clave": "C"
+    },
+    {
+      "numero": 65,
+      "seccion": "Conocimientos",
+      "subseccion": "Geografía",
+      "tema": "El Perú",
+      "enunciado": "De acuerdo a la posición latitudinal, el Perú debería presentar un clima:",
+      "alternativas": {"A": "Tropical", "B": "Subtropical", "C": "Semitropical", "D": "Templado", "E": "Frío"},
+      "respuesta": "Tropical",
+      "clave": "A"
+    },
+    {
+      "numero": 66,
+      "seccion": "Conocimientos",
+      "subseccion": "Economía",
+      "tema": "Sectores Económicos",
+      "enunciado": "Durante el confinamiento por COVID-19, el auge de servicios de delivery derivó en un crecimiento de las actividades económicas:",
+      "alternativas": {"A": "Extractivas", "B": "Productivas", "C": "Transformativas", "D": "Distributivas", "E": "Primarias"},
+      "respuesta": "Distributivas",
+      "clave": "D"
+    },
+    {
+      "numero": 67,
+      "seccion": "Conocimientos",
+      "subseccion": "Economía",
+      "tema": "El Capital",
+      "enunciado": "Al capital que se relaciona con la tasa de interés activa y es brindado por terceros, se denomina:",
+      "alternativas": {"A": "Financiero", "B": "Fijo", "C": "Circulante", "D": "Humano", "E": "Comercial"},
+      "respuesta": "Financiero",
+      "clave": "A"
+    },
+    {
+      "numero": 68,
+      "seccion": "Conocimientos",
+      "subseccion": "Economía",
+      "tema": "Proceso Productivo",
+      "enunciado": "Si renuncio ir al cine para ir al estadio, el costo asumido se denomina:",
+      "alternativas": {"A": "De oportunidad", "B": "Eficiencia", "C": "Marginal", "D": "De factores", "E": "Efectividad"},
+      "respuesta": "De oportunidad",
+      "clave": "A"
+    },
+    {
+      "numero": 69,
+      "seccion": "Conocimientos",
+      "subseccion": "Filosofía",
+      "tema": "Epistemología",
+      "enunciado": "Son elementos fundamentales de una ciencia:",
+      "alternativas": {"A": "Objeto y teoría", "B": "Objeto, campo y teoría", "C": "Objeto, método y teoría", "D": "Teoría y métodos propios", "E": "Observación, experimentación y comparación"},
+      "respuesta": "Objeto, método y teoría",
+      "clave": "C"
+    },
+    {
+      "numero": 70,
+      "seccion": "Conocimientos",
+      "subseccion": "Filosofía",
+      "tema": "La Ética",
+      "enunciado": "Constituyen la conditio sine qua non de la ética; es decir su condición de posibilidad:",
+      "alternativas": {"A": "La razón", "B": "El juicio", "C": "La moral", "D": "La libertad", "E": "La circunstancia"},
+      "respuesta": "La libertad",
+      "clave": "D"
+    },
+    {
+      "numero": 71,
+      "seccion": "Conocimientos",
+      "subseccion": "Filosofía",
+      "tema": "La Axiología",
+      "enunciado": "Factores esenciales del acto valorativo",
+      "alternativas": {"A": "Sociales, actitudinales e intelectuales", "B": "Afectivos, activos e intelectuales", "C": "Ideales, emotivos y abstractos", "D": "Sociales, económicos y políticos", "E": "Actitudinales e intelectuales"},
+      "respuesta": "Afectivos, activos e intelectuales",
+      "clave": "B"
+    },
+    {
+      "numero": 72,
+      "seccion": "Conocimientos",
+      "subseccion": "Física",
+      "tema": "Ley de Ohm",
+      "enunciado": "Dada una agrupación de resistores, si la diferencia de potencial entre A y B es de 120V, calcular la diferencia de potencial en los terminales del elemento de resistencia 2R.",
+      "alternativas": {"A": "30 V", "B": "40 V", "C": "50 V", "D": "60 V", "E": "80 V"},
+      "respuesta": "60 V",
+      "clave": "D"
+    },
+    {
+      "numero": 73,
+      "seccion": "Conocimientos",
+      "subseccion": "Física",
+      "tema": "Descomposición de Vectores",
+      "enunciado": "Si |F|=300N, determine el módulo de la componente de la fuerza del músculo deltoides que estabiliza la articulación (sen 15°=0,26; cos 15°=0,97)",
+      "alternativas": {"A": "78 N", "B": "156 N", "C": "234 N", "D": "291 N", "E": "321 N"},
+      "respuesta": "78 N",
+      "clave": "A"
+    },
+    {
+      "numero": 74,
+      "seccion": "Conocimientos",
+      "subseccion": "Química",
+      "tema": "Sistemas Termodinámicos",
+      "enunciado": "Identifique como V(verdadero) o F(falso): ( ) Solo los gases son sistemas termodinámicos / ( ) En un proceso adiabático no hay cambio de temperatura / ( ) Si escapa el 50% de las moléculas de un gas, el volumen se redujo a la mitad",
+      "alternativas": {"A": "VVV", "B": "VFV", "C": "FVF", "D": "VVF", "E": "FFF"},
+      "respuesta": "FFF",
+      "clave": "E"
+    },
+    {
+      "numero": 75,
+      "seccion": "Conocimientos",
+      "subseccion": "Química",
+      "tema": "Estado de Oxidación",
+      "enunciado": "La ecuación química que representa una reacción Redox es",
+      "alternativas": {"A": "2HNO₃(l) + CaO(s) → Ca(NO₃)₂(s) + H₂O(l)", "B": "Al₂S₃(s) + 6H₂O(l) → 2Al(OH)₃(s) + 3H₂S(g)", "C": "PbCl₂ + Li₂SO₄ → 2PbSO₄ + 2LiCl", "D": "Fe₂(SO₄)₃ + 3BaCl₂ → 3BaSO₄ + 2FeCl₂", "E": "4C₃H₅N₃O₉ → 6N₂ + 12CO₂ + 10H₂O + O₂"},
+      "respuesta": "4C₃H₅N₃O₉ → 6N₂ + 12CO₂ + 10H₂O + O₂",
+      "clave": "E"
+    },
+    {
+      "numero": 76,
+      "seccion": "Conocimientos",
+      "subseccion": "Química",
+      "tema": "Estado de Oxidación",
+      "enunciado": "El compuesto químico que contiene el catión ferroso es",
+      "alternativas": {"A": "FeH₃", "B": "K₃Fe(CN)₆", "C": "Fe₃(PO₄)₂", "D": "Fe(OH)₂Br", "E": "Fe₂(TeO₄)₃"},
+      "respuesta": "Fe₃(PO₄)₂",
+      "clave": "C"
+    },
+    {
+      "numero": 77,
+      "seccion": "Conocimientos",
+      "subseccion": "Química",
+      "tema": "Número de Átomos",
+      "enunciado": "En la descomposición completa de 1280g de CaC₂O₄ se obtiene una cantidad total de átomos igual a",
+      "alternativas": {"A": "10 NA", "B": "70", "C": "70 at-g", "D": "42,14×10²⁴", "E": "42,14×10²³"},
+      "respuesta": "42,1154×10²⁴",
+      "clave": "D"
+    },
+    {
+      "numero": 78,
+      "seccion": "Conocimientos",
+      "subseccion": "Química",
+      "tema": "Tipos de Carbono",
+      "enunciado": "En el compuesto (CH₃)₃CCH(CH₃)C(C(CH₃)₃)₂CH₃, la cantidad de carbono(s) terciario(s) y cuaternario(s) es",
+      "alternativas": {"A": "11 y 1", "B": "11 y 4", "C": "1 y 4", "D": "4 y 3", "E": "13 y 0"},
+      "respuesta": "1 y 4",
+      "clave": "C"
+    },
+    {
+      "numero": 79,
+      "seccion": "Conocimientos",
+      "subseccion": "Química",
+      "tema": "Números Cuánticos y Tabla Periódica",
+      "enunciado": "El último electrón del E⁻³ tiene los números cuánticos (2,1,+1,-1/2). Este elemento en la tabla periódica se encuentra en",
+      "alternativas": {"A": "n=2 y grupo VI A", "B": "n=6 y grupo II A", "C": "n=3 y grupo VIII A", "D": "n=2 y grupo V A", "E": "n=2 y grupo V B"},
+      "respuesta": "n=2, Grupo V (Nitrógeno)",
+      "clave": "D"
+    },
+    {
+      "numero": 80,
+      "seccion": "Conocimientos",
+      "subseccion": "Química",
+      "tema": "Partes por Millón (ppm)",
+      "enunciado": "A 10m³ de agua destilada se le adiciona 0,5 moles de Na₂CO₃. ¿Cuál sería la concentración en ppm del ion CO₃⁻²?",
+      "alternativas": {"A": "5,4", "B": "106", "C": "6,0", "D": "4,0", "E": "3,0"},
+      "respuesta": "5,3 ppm",
+      "clave": "A"
+    },
+    {
+      "numero": 81,
+      "seccion": "Conocimientos",
+      "subseccion": "Anatomía",
+      "tema": "Sistema Nervioso",
+      "enunciado": "Con respecto al sistema nervioso, es correcto:",
+      "alternativas": {"A": "Los neurotransmisores actúan en varios momentos en la célula postsináptica", "B": "Las neuronas se comunican por sinapsis y las señales transmitidas reciben el nombre de potenciales postsinápticos", "C": "Las neuronas sensitivas reciben instrucciones a partir de neuronas de asociación", "D": "Las neuronas motoras son aquellas que responden a un estímulo", "E": "El sistema nervioso central consta de encéfalo, médula espinal y nervios periféricos"},
+      "respuesta": "Los neurotransmisores actúan en varios momentos en la célula postsináptica",
+      "clave": "A"
+    },
+    {
+      "numero": 82,
+      "seccion": "Conocimientos",
+      "subseccion": "Biología",
+      "tema": "Carbohidratos",
+      "enunciado": "La fructosa 1,6 difosfato es desdoblada por una enzima llamada",
+      "alternativas": {"A": "hexocinasa", "B": "aldolasa", "C": "acotinasa", "D": "lactato deshidrogenasa", "E": "fumarasa"},
+      "respuesta": "aldolasa",
+      "clave": "B"
+    },
+    {
+      "numero": 83,
+      "seccion": "Conocimientos",
+      "subseccion": "Biología",
+      "tema": "Fotosíntesis",
+      "enunciado": "Son reacciones químicas que se llevan a cabo en la célula vegetal, excepto",
+      "alternativas": {"A": "fotosíntesis", "B": "ciclo de Calvin Benson", "C": "glicólisis", "D": "ciclo de Krebs", "E": "ciclo del glutatión reductasa"},
+      "respuesta": "ciclo del glutatión reductasa",
+      "clave": "E"
+    },
+    {
+      "numero": 84,
+      "seccion": "Conocimientos",
+      "subseccion": "Biología",
+      "tema": "El Agua",
+      "enunciado": "Con respecto a la molécula del agua, señale la afirmación que NO corresponde",
+      "alternativas": {"A": "es una biomolécula inorgánica", "B": "es una molécula polar", "C": "es una molécula que disuelve gases", "D": "es una molécula apolar", "E": "disuelve moléculas polares"},
+      "respuesta": "es una molécula apolar",
+      "clave": "D"
+    },
+    {
+      "numero": 85,
+      "seccion": "Conocimientos",
+      "subseccion": "Biología",
+      "tema": "Genética",
+      "enunciado": "Sobre el método del cuadro de Punnett, señale la afirmación verdadera",
+      "alternativas": {"A": "No es intuitivo", "B": "Se le asignan números para reemplazar los alelos diferentes", "C": "Determina solo fenotipos", "D": "Sus alelos dominantes van con minúsculas", "E": "determina genotipos y fenotipos"},
+      "respuesta": "determina genotipos y fenotipos",
+      "clave": "E"
+    },
+    {
+      "numero": 86,
+      "seccion": "Conocimientos",
+      "subseccion": "Biología",
+      "tema": "Cadenas Alimenticias",
+      "enunciado": "Son considerados el primer nivel trófico porque obtienen su energía directamente de la luz solar",
+      "alternativas": {"A": "halcones", "B": "jirafas", "C": "saltamontes", "D": "cianobacterias", "E": "lobos"},
+      "respuesta": "cianobacterias",
+      "clave": "D"
+    },
+    {
+      "numero": 87,
+      "seccion": "Conocimientos",
+      "subseccion": "Biología",
+      "tema": "Citología",
+      "enunciado": "Es considerada una estructura dentro de la célula que realiza una función específica",
+      "alternativas": {"A": "tejido", "B": "partícula subatómica", "C": "átomo", "D": "molécula", "E": "organelo"},
+      "respuesta": "organelo",
+      "clave": "E"
+    },
+    {
+      "numero": 88,
+      "seccion": "Conocimientos",
+      "subseccion": "Biología",
+      "tema": "Zoología",
+      "enunciado": "La lombriz de tierra forma parte del filum",
+      "alternativas": {"A": "porífera", "B": "platelminthes", "C": "cnidaria", "D": "nematoda", "E": "anélida"},
+      "respuesta": "anélida",
+      "clave": "E"
+    },
+    {
+      "numero": 89,
+      "seccion": "Conocimientos",
+      "subseccion": "Biología",
+      "tema": "Características de los Seres Vivos",
+      "enunciado": "Identifique la falsedad sobre la homeostasis",
+      "alternativas": {"A": "El proceso de excreción consiste en eliminar las sustancias de desecho para mantener la homeostasis", "B": "Los órganos como los riñones y pulmones regulan la homeostasis del cuerpo", "C": "El intercambio de gases en la respiración permite mantener la homeostasis", "D": "La piel es un órgano que no participa en el proceso de homeostasis", "E": "La fiebre es un proceso que altera la homeostasis en el organismo"},
+      "respuesta": "La piel es un órgano que no participa en el proceso de homeostasis",
+      "clave": "D"
+    },
+    {
+      "numero": 90,
+      "seccion": "Conocimientos",
+      "subseccion": "Biología",
+      "tema": "Ciclo Celular",
+      "enunciado": "Del proceso de división celular, corresponde a la telofase: I. las cromátides están en los polos / II. los cromosomas aparecen condensados / III. se organiza el núcleo / IV. se acortan las fibras del huso / V. se evidencia la separación de células hijas",
+      "alternativas": {"A": "I, II, III", "B": "I, III, V", "C": "II, III, IV", "D": "II, III, V", "E": "III, IV, V"},
+      "respuesta": "III, IV, V",
+      "clave": "E"
+    },
+    {
+      "numero": 91,
+      "seccion": "Conocimientos",
+      "subseccion": "Biología",
+      "tema": "Citología",
+      "enunciado": "El modelo de mosaico fluido de membrana celular fue propuesto por",
+      "alternativas": {"A": "R. Virchow", "B": "T. Shwann", "C": "Singer y Nicholson", "D": "M. Schleiden", "E": "T. Shwann y M. Schleiden"},
+      "respuesta": "Singer y Nicholson",
+      "clave": "C"
+    },
+    {
+      "numero": 92,
+      "seccion": "Conocimientos",
+      "subseccion": "Biología",
+      "tema": "Metabolismo",
+      "enunciado": "La suma de actividades químicas que permite el crecimiento, conservación y reparación celular, donde las reacciones forman moléculas complejas a partir de moléculas sencilla se denomina",
+      "alternativas": {"A": "catabolismo", "B": "bioenergética", "C": "catálisis", "D": "anabolismo", "E": "fotólisis"},
+      "respuesta": "anabolismo",
+      "clave": "D"
+    },
+    {
+      "numero": 93,
+      "seccion": "Conocimientos",
+      "subseccion": "Biología",
+      "tema": "Legislación Ambiental",
+      "enunciado": "La evaluación de impacto ambiental tiene como estructura: I. leyes ambientales / II. identificación y jerarquización de impactos / III. plan de manejo de impactos / IV. el proceso de formación de la lluvia ácida / V. confronta la cumbre sobre cambio climático",
+      "alternativas": {"A": "I, II, III", "B": "II, III, IV", "C": "III, IV, V", "D": "I, III, V", "E": "I, IV, V"},
+      "respuesta": "I, II, III",
+      "clave": "A"
+    },
+    {
+      "numero": 94,
+      "seccion": "Conocimientos",
+      "subseccion": "Biología",
+      "tema": "Sentidos",
+      "enunciado": "En el ojo humano la cavidad entre la córnea y el cristalino está ocupado por:",
+      "alternativas": {"A": "Esclerótica", "B": "Humor vítreo", "C": "Cuerpo ciliar", "D": "Humor acuoso", "E": "Ligamento ciliar"},
+      "respuesta": "Humor acuoso",
+      "clave": "D"
+    },
+    {
+      "numero": 95,
+      "seccion": "Conocimientos",
+      "subseccion": "Biología",
+      "tema": "Salud y Enfermedad",
+      "enunciado": "El mosquito transmisor del dengue pertenece al g��nero",
+      "alternativas": {"A": "Plasmodium", "B": "Aedes", "C": "Lutzomia", "D": "Culex", "E": "Apis"},
+      "respuesta": "Aedes",
+      "clave": "B"
+    },
+    {
+      "numero": 96,
+      "seccion": "Conocimientos",
+      "subseccion": "Biología",
+      "tema": "Sistema Reproductor Femenino",
+      "enunciado": "Es la ausencia de la menstruación:",
+      "alternativas": {"A": "Amenorrea", "B": "Dismenorrea", "C": "Mioma", "D": "Hemorragia uterina disfuncional", "E": "Endometriosis"},
+      "respuesta": "Amenorrea",
+      "clave": "A"
+    },
+    {
+      "numero": 97,
+      "seccion": "Conocimientos",
+      "subseccion": "Biología",
+      "tema": "Sistema Óseo",
+      "enunciado": "No corresponde a la osificación endocondral:",
+      "alternativas": {"A": "Formación de hueso dentro del cartílago hialino", "B": "Las células mesenquimatosas se transforman en condroblastos", "C": "Los huesos largos se forman por este tipo de osificación", "D": "El maxilar inferior se forma por este tipo de osificación", "E": "Cuando el pericondrio empieza a formar tejido óseo se le conoce como periostio"},
+      "respuesta": "El maxilar inferior se forma por este tipo de osificación",
+      "clave": "D"
+    },
+    {
+      "numero": 98,
+      "seccion": "Conocimientos",
+      "subseccion": "Biología",
+      "tema": "Tejido Muscular",
+      "enunciado": "Una de las siguientes afirmaciones NO corresponde a la fase de contracción muscular:",
+      "alternativas": {"A": "El impulso nervioso libera acetilcolina", "B": "El potencial de acción viaja por los Túbulos T", "C": "La acetilcolina es removida por la acetilcolinesterasa", "D": "La acetilcolina liberada se une a los receptores nicotínicos musculares", "E": "El calcio liberado se une a la Troponina C"},
+      "respuesta": "El potencial de acción viaja por los Túbulos T",
+      "clave": "B"
+    },
+    {
+      "numero": 99,
+      "seccion": "Conocimientos",
+      "subseccion": "Biología",
+      "tema": "Tejido Óseo",
+      "enunciado": "Trastorno que consiste en que la resorción ósea es mayor que la formación de hueso, disminuyendo la masa ósea:",
+      "alternativas": {"A": "Raquitismo", "B": "Osteoporosis", "C": "Osteomalacia", "D": "Osteomielitis", "E": "Osteoartritis"},
+      "respuesta": "Osteoporosis",
+      "clave": "B"
+    },
+    {
+      "numero": 100,
+      "seccion": "Conocimientos",
+      "subseccion": "Biología",
+      "tema": "Tejido Muscular",
+      "enunciado": "El endurecimiento de los músculos en el cadáver por ausencia de ATP y salida de calcio del retículo sarcoplasmático se denomina:",
+      "alternativas": {"A": "Atrofia muscular", "B": "Distrofia muscular", "C": "Miastenia gravis", "D": "Fasciculación", "E": "Rigor mortis"},
+      "respuesta": "Rigor mortis",
+      "clave": "E"
+    }
+  ]
+}
