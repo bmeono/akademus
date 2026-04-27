@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/common/Card';
 import { BookOpen, Users, BarChart3, Settings, Plus, Trash2, Edit, X, FolderTree, GraduationCap, ListChecks, Layers, BookMarked, GraduationCapIcon, Trophy, Search, CheckCircle, XCircle, Clock } from 'lucide-react';
-import { usersAPI } from '../services/api';
+import { usersAPI, adminAPI } from '../services/api';
 import api from '../services/api';
 
 interface Bloque {
@@ -139,14 +139,15 @@ export default function AdminPage() {
   const [filtroGrupo, setFiltroGrupo] = useState<string>('todos');
   const [filtroEstado, setFiltroEstado] = useState<string>('');
 
-  const tabs = [
+const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'usuarios', label: 'Usuarios', icon: Users },
-    { id: 'bloques', label: 'Bloques', icon: Layers },
-    { id: 'areas', label: 'Areas', icon: BookMarked },
-    { id: 'asignaturas', label: 'Asignaturas', icon: BookOpen },
-    { id: 'grupos-acad', label: 'Grupos Academicos', icon: GraduationCapIcon },
-    { id: 'especialidades', label: 'Especialidades', icon: GraduationCap },
+    { id: 'permisos', label: 'Permisos', icon: Settings },
+    { id: 'bloques', label: 'Bloques', icon: FolderTree },
+    { id: 'areas', label: 'Áreas', icon: FolderTree },
+    { id: 'asignaturas', label: 'Asignaturas', icon: BookMarked },
+    { id: 'grupos-acad', label: 'Grupos', icon: GraduationCap },
+    { id: 'especialidades', label: 'Especialidades', icon: Trophy },
     { id: 'config-puntaje', label: 'Config Puntaje', icon: Trophy },
     { id: 'cursos', label: 'Cursos', icon: Settings },
     { id: 'temas', label: 'Temas', icon: Settings },
@@ -219,6 +220,15 @@ export default function AdminPage() {
         setPreguntas(res.data);
         const asigRes = await api.get('/admin/asignaturas');
         setAsignaturas(asigRes.data);
+      } else if (activeTab === 'permisos') {
+        const res = await adminAPI.getUsuariosPermisos();
+        const data = res.data;
+        if (Array.isArray(data)) {
+          setUsuarios(data);
+        } else {
+          console.error('Error loading permisos:', data);
+          setUsuarios([]);
+        }
       }
     } catch (e) {
       console.error(e);
@@ -1109,6 +1119,46 @@ export default function AdminPage() {
                 No hay preguntas.
               </div>
             )}
+          </div>
+        );
+      case 'permisos':
+        return (
+          <div className="space-y-4">
+            <p className="text-slate-600">Administra los permisos de acceso de cada usuario.</p>
+            {usuarios.map(u => (
+              <Card key={u.id} className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <p className="font-semibold">{u.nombre}</p>
+                    <p className="text-sm text-slate-500">{u.email}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {['dashboard', 'simulacros', 'temas_debiles', 'flashcards'].map(seccion => {
+                    const perm = (u.permisos || []).find((p: any) => p.seccion === seccion);
+                    const tieneAcceso = perm?.tiene_acceso !== false;
+                    return (
+                      <label key={seccion} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={tieneAcceso}
+                          onChange={async (e) => {
+                            await adminAPI.updatePermiso({
+                              usuario_id: u.id,
+                              seccion: seccion,
+                              tiene_acceso: e.target.checked
+                            });
+                            loadData();
+                          }}
+                          className="w-4 h-4 rounded text-primary-600"
+                        />
+                        <span className="text-sm capitalize">{seccion.replace('_', ' ')}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </Card>
+            ))}
           </div>
         );
       default:

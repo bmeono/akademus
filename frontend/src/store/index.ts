@@ -10,10 +10,20 @@ interface User {
   especialidad_id?: number;
 }
 
+interface Permisos {
+  dashboard?: boolean;
+  simulacros?: boolean;
+  temas_debiles?: boolean;
+  flashcards?: boolean;
+}
+
 interface AppState {
   // Auth
   user: User | null;
   isAuthenticated: boolean;
+  
+  // Permisos
+  permisos: Permisos;
   
   // UI
   sidebarOpen: boolean;
@@ -21,6 +31,7 @@ interface AppState {
   // Actions
   setUser: (user: User | null) => void;
   setAuthenticated: (value: boolean) => void;
+  setPermisos: (permisos: Permisos) => void;
   toggleSidebar: () => void;
   logout: () => void;
 }
@@ -31,12 +42,14 @@ export const useAppStore = create<AppState>()(
     (set) => ({
       user: null,
       isAuthenticated: false,
+      permisos: { dashboard: true, simulacros: true, temas_debiles: true, flashcards: true },
       sidebarOpen: true,
       
       setUser: (user) => set({ user, isAuthenticated: !!user }),
       setAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
+      setPermisos: (permisos) => set({ permisos }),
       toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
-      logout: () => set({ user: null, isAuthenticated: false }),
+      logout: () => set({ user: null, isAuthenticated: false, permisos: { dashboard: true, simulacros: true, temas_debiles: true, flashcards: true } }),
     }),
     {
       name: 'akademus-storage',

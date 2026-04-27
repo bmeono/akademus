@@ -187,14 +187,18 @@ async def get_current_user_optional(
     return await get_current_user(credentials)
 
 
-def require_role(allowed_roles: list):
+def require_role(allowed_roles):
     """
     Dependencia factory para requerir roles específicos.
     Uso: @app.get("/admin") -> Depends(require_role([1]))
+    allowed_roles puede ser un int o una lista de ints.
     """
+    if isinstance(allowed_roles, int):
+        allowed_roles = [allowed_roles]
 
     async def role_checker(current_user: dict = Depends(get_current_user)):
-        if current_user.get("rol_id") not in allowed_roles:
+        rol_id = current_user.get("rol_id", 1)
+        if rol_id not in allowed_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permisos"
             )

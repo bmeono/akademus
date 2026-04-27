@@ -1,11 +1,12 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAppStore } from '../store';
-import { usersAPI } from '../services/api';
+import { usersAPI, adminAPI } from '../services/api';
 import { LayoutDashboard, BookOpen, Brain, PenTool, LogOut, User, Settings, AlertTriangle } from 'lucide-react';
 
 export default function DashboardLayout() {
-  const { user, logout, setUser, setAuthenticated } = useAppStore();
+  const { user, logout, setUser, setAuthenticated, setPermisos, permisos } = useAppStore();
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -14,14 +15,25 @@ export default function DashboardLayout() {
         const { data } = await usersAPI.me();
         setUser(data);
         setAuthenticated(true);
+        
+        // Cargar permisos
+        try {
+          const perms = await adminAPI.getMisPermisos();
+          setPermisos(perms.data);
+        } catch {
+          // Si falla, dar permisos por defecto
+setPermisos({ dashboard: true, simulacros: true, temas_debiles: true, flashcards: true });
+        }
       } catch {
         logout();
         navigate('/login');
+      } finally {
+        setLoading(false);
       }
     };
     init();
   }, []);
-  
+
   const handleLogout = async () => {
     try {
       await fetch('http://127.0.0.1:8001/auth/logout', {
@@ -33,14 +45,13 @@ export default function DashboardLayout() {
     logout();
     navigate('/login');
   };
-  
+
   const menuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
-    { icon: BookOpen, label: 'Simulacros', href: '/simulacros' },
-    { icon: AlertTriangle, label: 'Temas Débiles', href: '/temas-debiles' },
-    { icon: Brain, label: 'Flashcards', href: '/flashcards' },
-    // { icon: PenTool, label: 'Feynman', href: '/feynman' },
-  ];
+    permisos?.dashboard !== false && { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
+    permisos?.simulacros !== false && { icon: BookOpen, label: 'Simulacros', href: '/simulacros' },
+    permisos?.temas_debiles !== false && { icon: AlertTriangle, label: 'Temas Débiles', href: '/temas-debiles' },
+    permisos?.flashcards !== false && { icon: Brain, label: 'Flashcards', href: '/flashcards' },
+  ].filter(Boolean);
 
   const isAdmin = user?.rol_id === 2;
   if (isAdmin) {

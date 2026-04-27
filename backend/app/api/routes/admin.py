@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from fastapi.security import HTTPBearer
 from psycopg2 import connect
 from pydantic import BaseModel
 import sys
@@ -8,6 +9,7 @@ from app.core.security import require_role
 
 settings = get_settings()
 router = APIRouter(prefix="/admin", tags=["Admin"])
+http_bearer = HTTPBearer(auto_error=False)
 
 def get_db_connection():
     return connect(host=settings.db_host, port=settings.db_port, user=settings.db_user, password=settings.db_password, database=settings.db_name)
@@ -499,3 +501,153 @@ def revisar_reporte(reporte_id: int, resolver: bool, current_user: dict = Depend
     conn.commit()
     conn.close()
     return {"id": reporte_id, "estado": nuevo_estado}
+
+
+# ========== PERMISOS DE USUARIOS ==========
+
+@router.get("/init-permisos")
+async def init_permisos():
+    """Inicializa la tabla de permisos."""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS usuario_permisos (
+            id SERIAL PRIMARY KEY,
+            usuario_id UUID NOT NULL,
+            seccion VARCHAR(50) NOT NULL,
+            tiene_acceso BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(usuario_id, seccion)
+        )
+    """)
+    
+    conn.commit()
+    conn.close()
+    return {"message": "Tabla de permisos creada"}
+
+
+@router.get("/usuarios-permisos")
+async def get_usuarios_permisos(current_user: dict = Depends(require_role(2))):
+    """Obtiene todos los usuarios con sus permisos."""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Obtener usuarios
+        cur.execute("SELECT id, email, rol_id FROM usuarios WHERE rol_id != 2 ORDER BY email")
+        rows = cur.fetchall()
+        
+        usuarios = []
+        for r in rows:
+            usuario_id = str(r[0])
+            
+            # Obtener permisos
+            cur.execute("SELECT seccion, tiene_acceso FROM usuario_permisos WHERE usuario_id = %s", (usuario_id,))
+            perms = cur.fetchall()
+            permisos = {p[0]: p[1] for p in perms} if perms else {}
+            
+            usuarios.append({
+                "id": usuario_id,
+                "nombre": r[1],  # usar email como nombre
+                "email": r[1],
+                "rol_id": r[2],
+                "permisos": [{"seccion": k, "tiene_acceso": v} for k, v in permisos.items()]
+            })
+        
+        conn.close()
+        return usuarios
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
+class PermisoUpdate(BaseModel):
+    usuario_id: str
+    seccion: str
+    tiene_acceso: bool
+
+
+@router.put("/usuarios-permisos")
+async def update_usuario_permiso(data: PermisoUpdate, current_user: dict = Depends(require_role(2))):
+    """Actualiza el permiso de un usuario para una sección."""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    cur.execute("""
+        INSERT INTO usuario_permisos (usuario_id, seccion, tiene_acceso)
+        VALUES (%s, %s, %s)
+        ON CONFLICT (usuario_id, seccion)
+        DO UPDATE SET tiene_acceso = %s
+    """, (data.usuario_id, data.seccion, data.tiene_acceso, data.tiene_acceso))
+    
+    conn.commit()
+    conn.close()
+    return {"usuario_id": data.usuario_id, "seccion": data.seccion, "tiene_acceso": data.tiene_acceso}
+
+
+@router.get("/mis-permisos")
+async def get_mis_permisos(credentials = Depends(http_bearer)):
+    """Obtiene los permisos del usuario actual."""
+    from app.core.security import decode_token
+    
+    if not credentials:
+        return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True}
+    
+    token = credentials.credentials
+    try:
+        payload = decode_token(token)
+    except:
+        return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True}
+    
+    user_id = payload.get("sub")
+    if not user_id:
+        return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True}
+    
+    rol_id = payload.get("rol", 1)
+    
+    if rol_id == 2:
+        return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True}
+    
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT seccion, tiene_acceso FROM usuario_permisos WHERE usuario_id = %s", (user_id,))
+        rows = cur.fetchall()
+        permisos = {r[0]: r[1] for r in rows}
+        conn.close()
+        
+        if not permisos:
+            return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True}
+        return permisos
+    except:
+        return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True}
+    
+    token = credentials.credentials
+    try:
+        payload = decode_token(token)
+    except:
+        return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True}
+    
+    user_id = payload.get("sub")
+    if not user_id:
+        return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True}
+    
+    rol_id = payload.get("rol", 1)
+    
+    if rol_id == 2:
+        return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True}
+    
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT seccion, tiene_acceso FROM usuario_permisos WHERE usuario_id = %s", (user_id,))
+        rows = cur.fetchall()
+        permisos = {r[0]: r[1] for r in rows}
+        conn.close()
+        
+        if not permisos:
+            return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True}
+        return permisos
+    except:
+        return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True}

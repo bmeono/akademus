@@ -119,6 +119,14 @@ export const dashboardAPI = {
   getUltimoSimulacro: () => api.get('/dashboard/ultimo-simulacro'),
 };
 
+// Admin - Permisos
+export const adminAPI = {
+  getUsuariosPermisos: () => api.get('/admin/usuarios-permisos'),
+  updatePermiso: (data: any) => api.put('/admin/usuarios-permisos', data),
+  getMisPermisos: () => api.get('/admin/mis-permisos'),
+  initPermisos: () => api.get('/admin/init-permisos'),
+};
+
 function logout() {
   localStorage.removeItem('access_token');
   localStorage.removeItem('refresh_token');
