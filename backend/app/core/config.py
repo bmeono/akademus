@@ -71,15 +71,4 @@ class Settings(BaseSettings):
 @lru_cache()
 def get_settings() -> Settings:
     """Obtiene la configuración cacheada."""
-    settings = Settings()
-    db_url = os.environ.get("DATABASE_URL", "")
-    # Only use DATABASE_URL if it looks valid
-    if db_url and db_url.startswith("postgres"):
-        parsed = parse_database_url(db_url)
-        if parsed:
-            settings.db_host = parsed["host"]
-            settings.db_port = parsed["port"]
-            settings.db_user = parsed["user"]
-            settings.db_password = parsed["password"]
-            settings.db_name = parsed["db_name"]
-    return settings
+    return Settings()
