@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { LoginForm, RegisterForm } from '../components/auth/AuthForms';
 import { GraduationCap } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 
 export default function LoginPage() {
   const [modo, setModo] = useState<'login' | 'register'>('login');
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   
   // Handle Google OAuth callback
   useEffect(() => {
@@ -16,15 +17,16 @@ export default function LoginPage() {
     if (accessToken && refreshToken && googleLogin) {
       localStorage.setItem('access_token', accessToken);
       localStorage.setItem('refresh_token', refreshToken);
-      window.location.href = '/dashboard';
+      navigate('/dashboard', { replace: true });
     }
-  }, [searchParams]);
+  }, [searchParams, navigate]);
   
   // Si ya tiene token, ir directamente al dashboard
-  if (localStorage.getItem('access_token')) {
-    window.location.href = '/dashboard';
-    return null;
-  }
+  useEffect(() => {
+    if (localStorage.getItem('access_token')) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate]);
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-primary-100 flex items-center justify-center p-4">
