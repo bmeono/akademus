@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { simulacrosAPI } from '../services/api';
+import api from '../services/api';
 
 interface Opcion {
   id: number;
