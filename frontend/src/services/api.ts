@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
-// API base URL - conectar con backend (puerto 8001)
-const API_URL = 'http://127.0.0.1:8001';
+// API base URL - production backend on Render
+const API_URL = 'https://akademus.onrender.com';
 
 // Instancia de axios
 const api: AxiosInstance = axios.create({
