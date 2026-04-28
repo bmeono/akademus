@@ -20,11 +20,20 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function ExternalRedirect({ url }: { url: string }) {
+  window.location.href = url;
+  return null;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        
+        {/* Google OAuth redirect - public route */}
+        <Route path="/auth/google" element={<ExternalRedirect url="https://akademus.onrender.com/auth/google" />} />
+        
         <Route path="/" element={
           <ProtectedRoute>
             <DashboardLayout />
