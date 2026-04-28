@@ -16,7 +16,20 @@ async def lifespan(app: FastAPI):
     Se ejecuta al iniciar y cerrar la aplicación.
     """
     print(f"Iniciando {settings.app_name} v{settings.app_version}")
-    print("Conexión a PostgreSQL: OK")
+    # Verify DB connection
+    try:
+        from psycopg2 import connect
+        conn = connect(
+            host=settings.db_host,
+            port=settings.db_port,
+            user=settings.db_user,
+            password=settings.db_password,
+            database=settings.db_name,
+        )
+        conn.close()
+        print(f"Conexión a PostgreSQL: OK (host={settings.db_host}, port={settings.db_port})")
+    except Exception as e:
+        print(f"Conexión a PostgreSQL: ERROR - {e}")
     yield
     print("Cerrando aplicación")
 
