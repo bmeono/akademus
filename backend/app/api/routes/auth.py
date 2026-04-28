@@ -393,7 +393,7 @@ async def google_callback(code: str = None, error: str = None):
         password_hash = hash_password(f"google_{google_id}_{email}")
         cur.execute(
             """INSERT INTO usuarios (id, email, nombre_completo, password_hash, rol_id, activo, fecha_registro)
-            VALUES (%s, %s, %s, %s, 3, TRUE, NOW())""",
+            VALUES (%s, %s, %s, %s, 2, TRUE, NOW())""",
             (user_id, email, nombre, password_hash),
         )
         conn.commit()
