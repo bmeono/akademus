@@ -140,7 +140,8 @@ export default function AdminPage() {
   const [filtroEstado, setFiltroEstado] = useState<string>('');
   const [permisosEditando, setPermisosEditando] = useState<Record<string, Record<string, boolean>>>({});
   const navigate = useNavigate();
-    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+
+  const tabs = [
     { id: 'usuarios', label: 'Usuarios', icon: Users },
     { id: 'permisos', label: 'Permisos', icon: Settings },
     { id: 'bloques', label: 'Bloques', icon: FolderTree },
