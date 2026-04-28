@@ -7,6 +7,8 @@ def parse_database_url(url: str = None):
     """Parse DATABASE_URL to extract connection parameters."""
     if not url:
         return None
+    # Remove query params
+    url = url.split("?")[0]
     # postgres://user:pass@host:port/dbname
     if "://" not in url:
         return None
