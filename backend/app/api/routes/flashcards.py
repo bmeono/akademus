@@ -136,7 +136,7 @@ async def get_preguntas_falladas_por_asignatura(asignatura_id: int, current_user
         """, (user_id, user_id, asignatura_id))
         conn.commit()
         
-        # Get questions not yet answered correctly for this subject
+        # Get questions NOT answered correctly for this user and subject
         cur.execute("""
             SELECT DISTINCT ON (p.id)
                 p.id as pregunta_id,
@@ -150,11 +150,13 @@ async def get_preguntas_falladas_por_asignatura(asignatura_id: int, current_user
             FROM resultados_detalle rd
             JOIN simulacros s ON s.id = rd.simulacro_id
             JOIN preguntas p ON p.id = rd.pregunta_id
-            LEFT JOIN flashcards f ON f.usuario_id = s.usuario_id AND f.pregunta_id = p.id
-            WHERE s.usuario_id = %s AND p.asignatura_id = %s AND rd.es_correcta = FALSE
-            AND (f.respondida IS FALSE OR f.respondida_correcta IS FALSE OR f.respondida IS NULL)
+            LEFT JOIN flashcards f ON f.usuario_id = %s AND f.pregunta_id = p.id
+            WHERE s.usuario_id = %s 
+              AND p.asignatura_id = %s 
+              AND rd.es_correcta = FALSE
+              AND (f.respondida IS NULL OR f.respondida_correcta = FALSE)
             ORDER BY p.id
-        """, (user_id, asignatura_id))
+        """, (user_id, user_id, asignatura_id))
         
         rows = cur.fetchall()
         preguntas = []
