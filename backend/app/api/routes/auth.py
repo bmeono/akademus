@@ -380,6 +380,10 @@ async def google_callback(code: str = None, error: str = None):
         if not email:
             from fastapi import RedirectResponse
             return RedirectResponse(url="/login?error=no_email")
+    except Exception as e:
+        print(f"[GOOGLE_CALLBACK] Error: {e}")
+        from fastapi import RedirectResponse
+        return RedirectResponse(url="/login?error=google_callback_error")
     
     # Busca o crea usuario
     conn = get_db_connection()
