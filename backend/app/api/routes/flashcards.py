@@ -136,12 +136,13 @@ async def get_preguntas_falladas_por_asignatura(asignatura_id: int, current_user
         """, (user_id, user_id, asignatura_id))
         conn.commit()
         
-        # Get questions NOT answered correctly for this user and subject
+# Get questions NOT answered correctly for this user and subject
         cur.execute("""
             SELECT DISTINCT ON (p.id)
                 p.id as pregunta_id,
                 p.enunciado,
                 p.imagen_url,
+                p.explicacion,
                 (SELECT texto FROM opciones WHERE pregunta_id = p.id AND es_correcta = TRUE) as opcion_correcta,
                 (SELECT texto FROM opciones WHERE pregunta_id = p.id AND es_correcta = FALSE LIMIT 1) as opcion_incorrecta,
                 f.id as flashcard_id,
@@ -165,11 +166,12 @@ async def get_preguntas_falladas_por_asignatura(asignatura_id: int, current_user
                 "pregunta_id": r[0],
                 "enunciado": r[1],
                 "imagen_url": r[2],
-                "opcion_correcta": r[3],
-                "opcion_incorrecta": r[4],
-                "flashcard_id": r[5],
-                "respondida": r[6],
-                "respondida_correcta": r[7],
+                "explicacion": r[3],
+                "opcion_correcta": r[4],
+                "opcion_incorrecta": r[5],
+                "flashcard_id": r[6],
+                "respondida": r[7],
+                "respondida_correcta": r[8],
             })
         
         conn.close()
