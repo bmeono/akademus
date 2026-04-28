@@ -19,6 +19,7 @@ interface Pregunta {
   flashcard_id?: number;
   respondida?: boolean;
   respondida_correcta?: boolean;
+  explicacion?: string;
 }
 
 export default function FlashcardsPage() {
@@ -80,6 +81,7 @@ export default function FlashcardsPage() {
   
   // Vista de preguntas dentro de una asignatura
   const pregunta = preguntas[preguntaActual];
+  const preguntaActualData = pregunta;
   
   const handleRespuesta = async (opcion: string, esCorrecta: boolean) => {
     if (respondido.correcto !== null) return;
@@ -200,6 +202,14 @@ export default function FlashcardsPage() {
             </div>
           )}
 
+          {/* Explicación cuando erró */}
+          {respondido.correcto === false && preguntaActualData?.explicacion && (
+            <div className="p-4 bg-amber-50 border-t border-amber-200">
+              <p className="font-semibold text-amber-800 mb-2">Explicación:</p>
+              <p className="text-amber-700">{preguntaActualData.explicacion}</p>
+            </div>
+          )}
+
           {/* Botón siguiente o continuar luego */}
           {respondido.correcto !== null && (
             <div className="p-6 border-t border-slate-200 space-y-3 bg-white">
@@ -251,10 +261,7 @@ className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-mediu
           {asignaturas.map((asig) => (
             <Card 
               key={asig.asignatura_id}
-              onClick={() => {
-                alert('Click en: ' + asig.asignatura_id);
-                loadPreguntas(asig.asignatura_id, asig.asignatura_nombre);
-              }}
+              onClick={() => loadPreguntas(asig.asignatura_id, asig.asignatura_nombre)}
               className="flex items-center justify-between cursor-pointer hover:border-primary-300 transition-all"
             >
               <div className="flex items-center gap-4">

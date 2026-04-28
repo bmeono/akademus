@@ -60,8 +60,8 @@ useEffect(() => {
     permisos?.flashcards !== false && { icon: Brain, label: 'Flashcards', href: '/flashcards' },
   ].filter(Boolean);
 
-  const isAdmin = user?.rol_id === 2;
-  if (isAdmin) {
+  const isAdmin = user?.rol_id === 1;
+  if (isAdmin && permisos?.admin !== false) {
     menuItems.push({ icon: Settings, label: 'Admin', href: '/admin' });
   }
   
