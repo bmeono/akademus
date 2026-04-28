@@ -334,14 +334,11 @@ async def google_login():
 @router.get("/google/callback")
 async def google_callback(code: str = None, error: str = None):
     """Callback de Google OAuth."""
-    print(f"[GOOGLE_CALLBACK] code={code[:20] if code else None}..., error={error}")
-    
     if error or not code:
-        return RedirectResponse(url="/login?error=google_auth_failed")
+        return RedirectResponse(url="https://www.akademus.online/login?error=google_auth_failed")
     
     try:
         import httpx
-        import asyncio
         
         # Intercambia code por tokens
         token_url = "https://oauth2.googleapis.com/token"
@@ -353,15 +350,11 @@ async def google_callback(code: str = None, error: str = None):
             "redirect_uri": "https://www.akademus.online/auth/google/callback",
         }
         
-        print(f"[GOOGLE_CALLBACK] Exchanging code for token...")
-        
         async with httpx.AsyncClient() as client:
             token_response = await client.post(token_url, data=data, timeout=30.0)
-            print(f"[GOOGLE_CALLBACK] Token response status: {token_response.status_code}")
             
             if token_response.status_code != 200:
-                print(f"[GOOGLE_CALLBACK] Token exchange failed: {token_response.text}")
-                return RedirectResponse(url="/login?error=token_exchange_failed")
+                return RedirectResponse(url="https://www.akademus.online/login?error=token_exchange_failed")
             
             tokens = token_response.json()
             access_token_google = tokens.get("access_token")
@@ -374,13 +367,10 @@ async def google_callback(code: str = None, error: str = None):
         nombre = user_info.get("name", email.split("@")[0])
         google_id = user_info.get("id")
         
-        print(f"[GOOGLE_CALLBACK] User info: {email}")
-        
         if not email:
-            return RedirectResponse(url="/login?error=no_email")
+            return RedirectResponse(url="https://www.akademus.online/login?error=no_email")
     except Exception as e:
-        print(f"[GOOGLE_CALLBACK] Error: {e}")
-        return RedirectResponse(url="/login?error=google_callback_error")
+        return RedirectResponse(url="https://www.akademus.online/login?error=google_callback_error")
     
     # Busca o crea usuario
     conn = get_db_connection()
@@ -405,18 +395,18 @@ async def google_callback(code: str = None, error: str = None):
     conn.close()
     
     if not user or not user[1]:
-        return RedirectResponse(url="/login?error=account_inactive")
+        return RedirectResponse(url="https://www.akademus.online/login?error=account_inactive")
     
     user_id, activo, two_factor_enabled = user[0], user[1], user[2]
     
     if not activo:
-        return RedirectResponse(url="/login?error=account_inactive")
+        return RedirectResponse(url="https://www.akademus.online/login?error=account_inactive")
     
     access_token = create_access_token({"user_id": user_id, "email": email, "type": "access"})
     refresh_token = create_refresh_token({"user_id": user_id, "type": "refresh"})
     
     return RedirectResponse(
-        url=f"/login?access_token={access_token}&refresh_token={refresh_token}&google_login=true"
+        url=f"https://www.akademus.online/login?access_token={access_token}&refresh_token={refresh_token}&google_login=true"
     )
 
 
