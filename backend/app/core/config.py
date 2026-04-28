@@ -5,18 +5,27 @@ from functools import lru_cache
 
 def parse_database_url(url: str = None):
     """Parse DATABASE_URL to extract connection parameters."""
-    if not url:
+    if not url or len(url.strip()) == 0:
+        return None
+    # Skip if doesn't start with postgres
+    if not url.startswith("postgres"):
         return None
     # Remove query params
     url = url.split("?")[0]
     # postgres://user:pass@host:port/dbname
-    if "://" not in url:
-        return None
     parts = url.replace("postgres://", "").split("@")
     if len(parts) != 2:
         return None
     auth, host_db = parts
-    user, pass_ = auth.split(":")
+    # Handle case where password contains : 
+    if ":" in auth:
+        user_pass = auth.split(":")
+        if len(user_pass) >= 2:
+            user = user_pass[0]
+            pass_ = ":".join(user_pass[1:])
+    else:
+        user = auth
+        pass_ = ""
     if "/" in host_db:
         host_port, dbname = host_db.rsplit("/", 1)
         if ":" in host_port:
@@ -28,6 +37,7 @@ def parse_database_url(url: str = None):
     else:
         host = host_db
         port = 5432
+        dbname = "postgres"
         dbname = "postgres"
     return {"host": host, "port": port, "user": user, "password": pass_, "db_name": dbname}
 
