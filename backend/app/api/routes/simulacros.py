@@ -576,10 +576,10 @@ async def finalizar_simulacro(
             
             opcion_correcta_id = opciones_correctas.get(pregunta_id)
             
-            es_correcta = False
+            es_correcta = None  # None = no respondida, True = correcta, False = incorrecta
             if opcion_seleccionada_id is None:
                 sin_responder += 1
-                es_correcta = False
+                es_correcta = None  # No respondida
             elif opcion_correcta_id and opcion_seleccionada_id == opcion_correcta_id:
                 aciertos += 1
                 puntaje_total += puntaje_float
@@ -589,10 +589,12 @@ async def finalizar_simulacro(
                 puntaje_total -= 1.125
                 es_correcta = False
             
-            cur.execute("""
-                INSERT INTO resultados_detalle (simulacro_id, pregunta_id, opcion_seleccionada_id, es_correcta)
-                VALUES (%s, %s, %s, %s)
-            """, (simulacro_id, pregunta_id, opcion_seleccionada_id, es_correcta))
+            # Solo guardar si respondio (no guardar si no respondio)
+            if es_correcta is not None:
+                cur.execute("""
+                    INSERT INTO resultados_detalle (simulacro_id, pregunta_id, opcion_seleccionada_id, es_correcta)
+                    VALUES (%s, %s, %s, %s)
+                """, (simulacro_id, pregunta_id, opcion_seleccionada_id, es_correcta))
         
         # Redondear a 2 decimales
         puntaje_total = round(puntaje_total, 2)
