@@ -31,8 +31,9 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         
-        {/* Google OAuth redirect - public route */}
+        {/* Google OAuth redirect - public routes */}
         <Route path="/auth/google" element={<ExternalRedirect url="https://akademus.onrender.com/auth/google" />} />
+        <Route path="/auth/google/callback" element={<ExternalRedirect url="https://akademus.onrender.com/auth/google/callback" />} />
         
         <Route path="/" element={
           <ProtectedRoute>
