@@ -163,7 +163,8 @@ const tabs = [
     setLoading(true);
     try {
       const userRes = await usersAPI.me();
-      if (userRes.data.rol_id !== 2) {
+      // rol_id 1 = admin pode acceder, rol_id 2 = usuario NO (redirigir)
+      if (userRes.data.rol_id !== 1) {
         navigate('/dashboard');
         return;
       }
