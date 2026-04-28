@@ -623,7 +623,7 @@ async def get_mis_permisos(credentials = Depends(http_bearer)):
         permisos = {r[0]: r[1] for r in rows}
         conn.close()
         
-if not permisos:
+        if not permisos:
             # Default para usuarios sin permisos definidos
             return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True, "feynman": True, "admin": False}
         
