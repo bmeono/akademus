@@ -38,7 +38,6 @@ def parse_database_url(url: str = None):
         host = host_db
         port = 5432
         dbname = "postgres"
-        dbname = "postgres"
     return {"host": host, "port": port, "user": user, "password": pass_, "db_name": dbname}
 
 
@@ -53,6 +52,7 @@ class Settings(BaseSettings):
     db_user: str = "neondb_owner"
     db_password: str = "npg_uIUNP0ZR4bzO"
     db_name: str = "neondb"
+    db_sslmode: str = "require"
 
     secret_key: str = "akademus-secret-key-change-in-production-2024"
     algorithm: str = "HS256"
@@ -72,8 +72,9 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Obtiene la configuración cacheada."""
     settings = Settings()
-    db_url = os.environ.get("DATABASE_URL")
-    if db_url:
+    db_url = os.environ.get("DATABASE_URL", "")
+    # Only use DATABASE_URL if it looks valid
+    if db_url and db_url.startswith("postgres"):
         parsed = parse_database_url(db_url)
         if parsed:
             settings.db_host = parsed["host"]

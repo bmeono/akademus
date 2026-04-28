@@ -24,6 +24,7 @@ def get_db_connection():
         user=settings.db_user,
         password=settings.db_password,
         database=settings.db_name,
+        sslmode=settings.db_sslmode if hasattr(settings, 'db_sslmode') else 'disable',
     )
 
 
