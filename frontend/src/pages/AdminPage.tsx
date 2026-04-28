@@ -138,10 +138,11 @@ export default function AdminPage() {
   const [busqueda, setBusqueda] = useState('');
   const [filtroGrupo, setFiltroGrupo] = useState<string>('todos');
   const [filtroEstado, setFiltroEstado] = useState<string>('');
-  const [permisosEditando, setPermisosEditando] = useState<Record<string, Record<string, boolean>>>({});
+  const [permisosEditando, setPermisosEditando] = useState<any>({});
   const navigate = useNavigate();
 
   const tabs = [
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'usuarios', label: 'Usuarios', icon: Users },
     { id: 'permisos', label: 'Permisos', icon: Settings },
     { id: 'bloques', label: 'Bloques', icon: FolderTree },
