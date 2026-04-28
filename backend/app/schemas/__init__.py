@@ -41,7 +41,7 @@ class UserResponse(BaseModel):
     id: str
     nombre_completo: str
     email: str
-    telefono: str
+    telefono: Optional[str] = None
     rol_id: int
     especialidad_id: Optional[int]
     two_factor_enabled: bool
