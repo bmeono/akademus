@@ -1,9 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LoginForm, RegisterForm } from '../components/auth/AuthForms';
 import { GraduationCap } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 
 export default function LoginPage() {
   const [modo, setModo] = useState<'login' | 'register'>('login');
+  const [searchParams] = useSearchParams();
+  
+  // Handle Google OAuth callback
+  useEffect(() => {
+    const accessToken = searchParams.get('access_token');
+    const refreshToken = searchParams.get('refresh_token');
+    const googleLogin = searchParams.get('google_login');
+    
+    if (accessToken && refreshToken && googleLogin) {
+      localStorage.setItem('access_token', accessToken);
+      localStorage.setItem('refresh_token', refreshToken);
+      window.location.href = '/dashboard';
+    }
+  }, [searchParams]);
   
   // Si ya tiene token, ir directamente al dashboard
   if (localStorage.getItem('access_token')) {

@@ -306,6 +306,111 @@ async def login(credentials: UserLogin):
     return {"requires_2fa": True, "temp_token": temp_token}
 
 
+@router.get("/google")
+async def google_login():
+    """Inicia el flujo de Google OAuth."""
+    import httpx
+    
+    if not settings.google_client_id:
+        raise HTTPException(status_code=500, detail="Google OAuth no configurado")
+    
+    google_auth_url = "https://accounts.google.com/o/oauth2/v2/auth"
+    params = {
+        "client_id": settings.google_client_id,
+        "redirect_uri": "https://www.akademus.online/auth/google/callback",
+        "response_type": "code",
+        "scope": "openid email profile",
+        "access_type": "offline",
+        "prompt": "consent",
+    }
+    
+    url = f"{google_auth_url}?" + "&".join(f"{k}={v}" for k, v in params.items())
+    
+    from fastapi import Response
+    return Response(status_code=302, headers={"Location": url})
+
+
+@router.get("/google/callback")
+async def google_callback(code: str = None, error: str = None):
+    """Callback de Google OAuth."""
+    import httpx
+    
+    if error or not code:
+        from fastapi import RedirectResponse
+        return RedirectResponse(url="/login?error=google_auth_failed")
+    
+    # Intercambia code por tokens
+    token_url = "https://oauth2.googleapis.com/token"
+    data = {
+        "client_id": settings.google_client_id,
+        "client_secret": settings.google_client_secret,
+        "code": code,
+        "grant_type": "authorization_code",
+        "redirect_uri": "https://www.akademus.online/auth/google/callback",
+    }
+    
+    async with httpx.AsyncClient() as client:
+        token_response = await client.post(token_url, data=data)
+        if token_response.status_code != 200:
+            from fastapi import RedirectResponse
+            return RedirectResponse(url="/login?error=token_exchange_failed")
+        
+        tokens = token_response.json()
+        access_token_google = tokens.get("access_token")
+        
+        user_info_url = "https://www.googleapis.com/oauth2/v2/userinfo"
+        user_response = await client.get(user_info_url, headers={"Authorization": f"Bearer {access_token_google}"})
+        user_info = user_response.json()
+    
+    email = user_info.get("email")
+    nombre = user_info.get("name", email.split("@")[0])
+    google_id = user_info.get("id")
+    
+    if not email:
+        from fastapi import RedirectResponse
+        return RedirectResponse(url="/login?error=no_email")
+    
+    # Busca o crea usuario
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    cur.execute("SELECT id, password_hash, activo, two_factor_enabled FROM usuarios WHERE email = %s", (email,))
+    user = cur.fetchone()
+    
+    if not user:
+        user_id = str(uuid.uuid4())
+        password_hash = hash_password(f"google_{google_id}_{email}")
+        cur.execute(
+            """INSERT INTO usuarios (id, email, nombre_completo, password_hash, rol_id, activo, fecha_registro)
+            VALUES (%s, %s, %s, %s, 3, TRUE, NOW())""",
+            (user_id, email, nombre, password_hash),
+        )
+        conn.commit()
+        
+        cur.execute("SELECT id, activo, two_factor_enabled FROM usuarios WHERE id = %s", (user_id,))
+        user = cur.fetchone()
+    
+    conn.close()
+    
+    if not user or not user[1]:
+        from fastapi import RedirectResponse
+        return RedirectResponse(url="/login?error=account_inactive")
+    
+    user_id, activo, two_factor_enabled = user
+    
+    if not activo:
+        from fastapi import RedirectResponse
+        return RedirectResponse(url="/login?error=account_inactive")
+    
+    access_token = create_access_token({"user_id": user_id, "email": email, "type": "access"})
+    refresh_token = create_refresh_token({"user_id": user_id, "type": "refresh"})
+    
+    from fastapi import RedirectResponse
+    return RedirectResponse(
+        url=f"/login?access_token={access_token}&refresh_token={refresh_token}&google_login=true"
+    )
+
+
 @router.post("/verify-2fa", response_model=TokenResponse)
 async def verify_2fa(data: OTPVerify):
     """
