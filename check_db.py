@@ -1,38 +1,21 @@
 import psycopg2
-conn = psycopg2.connect(host='localhost', port=5432, user='postgres', password='1323Bri@ncisc0', database='akademus')
+conn = psycopg2.connect(
+    host='ep-crimson-butterfly-amltr5by.c-5.us-east-1.aws.neon.tech',
+    port=5432,
+    user='neondb_owner',
+    password='npg_uIUNP0ZR4bzO',
+    database='neondb'
+)
 cur = conn.cursor()
+cur.execute("SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'public' ORDER BY tablename, indexname")
+print("=== ÍNDICES EXISTENTES ===")
+for row in cur.fetchall():
+    print(f"{row[0]}: {row[1]}")
 
-cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name")
-print('Tables:', [r[0] for r in cur.fetchall()])
-
-print()
-print('=== BLOQUES_TEMATICOS ===')
-cur.execute('SELECT * FROM bloques_tematicos ORDER BY orden')
-for r in cur.fetchall(): print(r)
-
-print()
-print('=== AREAS ===')
-cur.execute('SELECT * FROM areas ORDER BY orden')
-for r in cur.fetchall(): print(r)
-
-print()
-print('=== ASIGNATURAS ===')
-cur.execute('SELECT * FROM asignaturas ORDER BY orden')
-for r in cur.fetchall(): print(r)
-
-print()
-print('=== GRUPOS_ACADEMICOS ===')
-cur.execute('SELECT * FROM grupos_academicos ORDER BY orden')
-for r in cur.fetchall(): print(r)
-
-print()
-print('=== ESPECIALIDADES ===')
-cur.execute('SELECT * FROM especialidades ORDER BY id')
-for r in cur.fetchall(): print(r)
-
-print()
-print('=== CONFIGURACIONES_PUNTAJE ===')
-cur.execute('SELECT * FROM configuraciones_puntaje ORDER BY id')
-for r in cur.fetchall(): print(r)
+print("\n=== CONTEO DE TABLAS ===")
+tablas = ['usuarios', 'preguntas', 'opciones', 'simulacros', 'resultados_detalle', 'flashcards', 'respuestas_simulacro']
+for tabla in tablas:
+    cur.execute(f"SELECT COUNT(*) FROM {tabla}")
+    print(f"{tabla}: {cur.fetchone()[0]}")
 
 conn.close()

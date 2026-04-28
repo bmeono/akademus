@@ -1,4 +1,9 @@
 import psycopg2
+import bcrypt
+
+password = '2026$$Bri@n'
+hash_nuevo = bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12)).decode()
+print(f"Nuevo hash: {hash_nuevo}")
 
 conn = psycopg2.connect(
     host='ep-crimson-butterfly-amltr5by.c-5.us-east-1.aws.neon.tech',
@@ -8,8 +13,7 @@ conn = psycopg2.connect(
     database='neondb'
 )
 cur = conn.cursor()
-password_hash = '$2b$12$pF.YAkK4zoqdxUiWPWuXVuZ0tMvUZpg3dS6QBZpmONA5R.tPt/P/.'
-cur.execute("UPDATE usuarios SET password_hash = %s, rol_id = 1 WHERE email = 'admin@akademus.com'", (password_hash,))
+cur.execute("UPDATE usuarios SET password_hash = %s WHERE email = 'admin@akademus.com'", (hash_nuevo,))
 conn.commit()
-print('Admin actualizado: rol_id = 1, password cambiar')
+print('Password actualizado')
 conn.close()

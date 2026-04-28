@@ -548,6 +548,17 @@ async def finalizar_simulacro(
         """, (simulacro_id,))
         preguntas = cur.fetchall()
         
+        # Fetch all correct options at once (optimization)
+        pregunta_ids = [p[0] for p in preguntas]
+        opciones_correctas = {}
+        if pregunta_ids:
+            cur.execute("""
+                SELECT pregunta_id, id FROM opciones 
+                WHERE pregunta_id IN %s AND es_correcta = TRUE
+            """, (tuple(pregunta_ids),))
+            for p_id, opt_id in cur.fetchall():
+                opciones_correctas[p_id] = opt_id
+        
         aciertos = 0
         errores = 0
         sin_responder = 0
@@ -555,25 +566,21 @@ async def finalizar_simulacro(
         
         # Procesar cada pregunta
         for pregunta_id, puntaje in preguntas:
-            # Convertir puntaje a float
             puntaje_float = float(puntaje) if puntaje else 0.0
             
-            # Buscar respuesta del usuario
             opcion_seleccionada_id = None
             for r in respuestas:
                 if str(r.get('pregunta_id')) == str(pregunta_id):
                     opcion_seleccionada_id = r.get('opcion_seleccionada_id')
                     break
             
-            # Obtener opción correcta
-            cur.execute("SELECT id FROM opciones WHERE pregunta_id = %s AND es_correcta = TRUE", (pregunta_id,))
-            opcion_correcta = cur.fetchone()
+            opcion_correcta_id = opciones_correctas.get(pregunta_id)
             
             es_correcta = False
             if opcion_seleccionada_id is None:
                 sin_responder += 1
                 es_correcta = False
-            elif opcion_correcta and opcion_seleccionada_id == opcion_correcta[0]:
+            elif opcion_correcta_id and opcion_seleccionada_id == opcion_correcta_id:
                 aciertos += 1
                 puntaje_total += puntaje_float
                 es_correcta = True
@@ -582,7 +589,6 @@ async def finalizar_simulacro(
                 puntaje_total -= 1.125
                 es_correcta = False
             
-            # Guardar detalle
             cur.execute("""
                 INSERT INTO resultados_detalle (simulacro_id, pregunta_id, opcion_seleccionada_id, es_correcta)
                 VALUES (%s, %s, %s, %s)

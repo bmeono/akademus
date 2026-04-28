@@ -262,18 +262,21 @@ async def get_preguntas_falladas(asignatura_id: int, current_user: dict = Depend
     conn = get_db_connection()
     cur = conn.cursor()
 
+    # Optimized: use JOINs instead of subqueries
     cur.execute("""
         SELECT DISTINCT ON (p.id)
             p.id as pregunta_id,
             p.enunciado,
             rd.opcion_seleccionada_id,
-            (SELECT texto FROM opciones WHERE id = rd.opcion_seleccionada_id) as opcion_seleccionada,
-            (SELECT texto FROM opciones WHERE pregunta_id = p.id AND es_correcta = TRUE) as opcion_correcta,
+            os.texto as opcion_seleccionada,
+            oc.texto as opcion_correcta,
             a.nombre as asignatura_nombre
         FROM resultados_detalle rd
         JOIN simulacros s ON s.id = rd.simulacro_id
         JOIN preguntas p ON p.id = rd.pregunta_id
         JOIN asignaturas a ON a.id = p.asignatura_id
+        LEFT JOIN opciones os ON os.id = rd.opcion_seleccionada_id
+        LEFT JOIN opciones oc ON oc.pregunta_id = p.id AND oc.es_correcta = TRUE
         WHERE s.usuario_id = %s 
             AND p.asignatura_id = %s 
             AND rd.es_correcta = FALSE

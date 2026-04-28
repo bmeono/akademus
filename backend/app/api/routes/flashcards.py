@@ -132,25 +132,27 @@ async def get_preguntas_falladas_por_asignatura(asignatura_id: int, current_user
             JOIN simulacros s ON s.id = rd.simulacro_id
             JOIN preguntas p ON p.id = rd.pregunta_id
             WHERE s.usuario_id = %s AND p.asignatura_id = %s AND rd.es_correcta = FALSE
-            ON CONFLICT (usuario_id, pregunta_id) DO NOTHING
+ON CONFLICT (usuario_id, pregunta_id) DO NOTHING
         """, (user_id, user_id, asignatura_id))
         conn.commit()
         
-# Get questions NOT answered correctly for this user and subject
+        # Get questions NOT answered correctly - optimized with JOINs instead of subqueries
         cur.execute("""
             SELECT DISTINCT ON (p.id)
                 p.id as pregunta_id,
                 p.enunciado,
                 p.imagen_url,
                 p.explicacion,
-                (SELECT texto FROM opciones WHERE pregunta_id = p.id AND es_correcta = TRUE) as opcion_correcta,
-                (SELECT texto FROM opciones WHERE pregunta_id = p.id AND es_correcta = FALSE LIMIT 1) as opcion_incorrecta,
+                oc.texto as opcion_correcta,
+                oi.texto as opcion_incorrecta,
                 f.id as flashcard_id,
                 f.respondida,
                 f.respondida_correcta
             FROM resultados_detalle rd
             JOIN simulacros s ON s.id = rd.simulacro_id
             JOIN preguntas p ON p.id = rd.pregunta_id
+            LEFT JOIN opciones oc ON oc.pregunta_id = p.id AND oc.es_correcta = TRUE
+            LEFT JOIN opciones oi ON oi.pregunta_id = p.id AND oi.es_correcta = FALSE AND oi.id != oc.id
             LEFT JOIN flashcards f ON f.usuario_id = %s AND f.pregunta_id = p.id
             WHERE s.usuario_id = %s 
               AND p.asignatura_id = %s 
