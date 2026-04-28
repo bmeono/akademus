@@ -10,27 +10,36 @@ export default function DashboardLayout() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   
-  useEffect(() => {
+useEffect(() => {
     const init = async () => {
-      try {
-        const { data } = await usersAPI.me();
-        setUser(data);
-        setAuthenticated(true);
-        
-        // Cargar permisos
+      const tryFetch = async (attempt: number): Promise<boolean> => {
         try {
-          const perms = await adminAPI.getMisPermisos();
-          setPermisos(perms.data);
+          const { data } = await usersAPI.me();
+          setUser(data);
+          setAuthenticated(true);
+          
+          try {
+            const perms = await adminAPI.getMisPermisos();
+            setPermisos(perms.data);
+          } catch {
+            setPermisos({ dashboard: true, simulacros: true, temas_debiles: true, flashcards: true });
+          }
+          return true;
         } catch {
-          // Si falla, dar permisos por defecto
-setPermisos({ dashboard: true, simulacros: true, temas_debiles: true, flashcards: true });
+          if (attempt < 2) {
+            await new Promise(r => setTimeout(r, 2000));
+            return tryFetch(attempt + 1);
+          }
+          return false;
         }
-      } catch {
+      };
+      
+      const success = await tryFetch(0);
+      if (!success) {
         logout();
         navigate('/login');
-      } finally {
-        setLoading(false);
       }
+      setLoading(false);
     };
     init();
   }, []);
