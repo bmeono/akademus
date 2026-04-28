@@ -1,18 +1,24 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { simulacrosAPI } from '../services/api';
+import { useAppStore } from '../store';
 import { Card } from '../components/common/Card';
 
 export default function SimulacroPage() {
   const navigate = useNavigate();
+  const { permisos } = useAppStore();
   const [especialidades, setEspecialidades] = useState<any[]>([]);
   const [selectedEspecialidad, setSelectedEspecialidad] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (permisos && permisos.simulacros === false) {
+      navigate('/dashboard');
+      return;
+    }
     simulacrosAPI.getEspecialidades().then(r => setEspecialidades(r.data));
-  }, []);
+  }, [permisos]);
 
   const iniciarSimulacro = async () => {
     if (!selectedEspecialidad) return;

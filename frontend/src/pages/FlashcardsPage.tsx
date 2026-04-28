@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { flashcardsAPI } from '../services/api';
+import { useAppStore } from '../store';
 import { Card } from '../components/common/Card';
 import { Brain, ChevronRight, ArrowLeft, CheckCircle, XCircle, BookOpen, Target } from 'lucide-react';
 
@@ -23,6 +25,8 @@ interface Pregunta {
 }
 
 export default function FlashcardsPage() {
+  const navigate = useNavigate();
+  const { permisos } = useAppStore();
   const [asignaturas, setAsignaturas] = useState<Asignatura[]>([]);
   const [preguntas, setPreguntas] = useState<Pregunta[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,8 +36,12 @@ export default function FlashcardsPage() {
   const [respondido, setRespondido] = useState<{correcto: boolean | null; respuesta: string}>({correcto: null, respuesta: ''});
 
   useEffect(() => {
+    if (permisos && permisos.flashcards === false) {
+      navigate('/dashboard');
+      return;
+    }
     loadAsignaturas();
-  }, []);
+  }, [permisos]);
 
   const loadAsignaturas = async () => {
     setLoading(true);

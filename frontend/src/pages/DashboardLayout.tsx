@@ -22,7 +22,8 @@ useEffect(() => {
             const perms = await adminAPI.getMisPermisos();
             setPermisos(perms.data);
           } catch {
-            setPermisos({ dashboard: true, simulacros: true, temas_debiles: true, flashcards: true });
+            // Default to NO permissions if fails
+            setPermisos({});
           }
           return true;
         } catch {
@@ -54,10 +55,10 @@ useEffect(() => {
   };
 
   const menuItems = [
-    permisos?.dashboard !== false && { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
-    permisos?.simulacros !== false && { icon: BookOpen, label: 'Simulacros', href: '/simulacros' },
-    permisos?.temas_debiles !== false && { icon: AlertTriangle, label: 'Temas Débiles', href: '/temas-debiles' },
-    permisos?.flashcards !== false && { icon: Brain, label: 'Flashcards', href: '/flashcards' },
+    permisos?.dashboard === true && { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
+    permisos?.simulacros === true && { icon: BookOpen, label: 'Simulacros', href: '/simulacros' },
+    permisos?.temas_debiles === true && { icon: AlertTriangle, label: 'Temas Débiles', href: '/temas-debiles' },
+    permisos?.flashcards === true && { icon: Brain, label: 'Flashcards', href: '/flashcards' },
   ].filter(Boolean);
 
   // rol_id 1 = administrador, rol_id 2 = usuario común

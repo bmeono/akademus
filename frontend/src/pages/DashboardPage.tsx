@@ -1,16 +1,24 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { dashboardAPI } from '../services/api';
+import { useAppStore } from '../store';
 import { Activity, Flame, Target, BookOpen, Brain, TrendingUp, AlertTriangle, ArrowUp, ArrowDown, CheckCircle, XCircle, MinusCircle } from 'lucide-react';
 import { Card } from '../components/common/Card';
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
+  const { permisos } = useAppStore();
   const [resumen, setResumen] = useState<any>(null);
   const [evolucion, setEvolucion] = useState<any[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [asignaturasConErrores, setAsignaturasConErrores] = useState(0);
   const [ultimoSimulacro, setUltimoSimulacro] = useState<any>(null);
-  
+
   useEffect(() => {
+    if (permisos && permisos.dashboard === false) {
+      navigate('/simulacros');
+      return;
+    }
     const loadData = async () => {
       try {
         const [resData, evoData, statsData, temasData, ultimoData] = await Promise.all([

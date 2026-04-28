@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { dashboardAPI } from '../services/api';
+import { useAppStore } from '../store';
 import { AlertTriangle, BookOpen, ChevronRight, ArrowLeft, Eye } from 'lucide-react';
 import { Card } from '../components/common/Card';
 
@@ -20,6 +22,8 @@ interface PreguntaFallada {
 }
 
 export default function TemasDebilesPage() {
+  const navigate = useNavigate();
+  const { permisos } = useAppStore();
   const [asignaturas, setAsignaturas] = useState<Asignatura[]>([]);
   const [preguntas, setPreguntas] = useState<PreguntaFallada[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,10 +31,14 @@ export default function TemasDebilesPage() {
   const [asignaturaNombre, setAsignaturaNombre] = useState<string>('');
 
   useEffect(() => {
+    if (permisos && permisos.temas_debiles === false) {
+      navigate('/dashboard');
+      return;
+    }
     loadAsignaturas();
-  }, []);
+  }, [permisos]);
 
-const loadAsignaturas = async () => {
+  const loadAsignaturas = async () => {
     try {
       const res = await dashboardAPI.getTemasDebilesDetalle();
       const response = res.data;
