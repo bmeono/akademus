@@ -588,7 +588,9 @@ async def finalizar_simulacro(
                 VALUES (%s, %s, %s, %s)
             """, (simulacro_id, pregunta_id, opcion_seleccionada_id, es_correcta))
         
-        # NO限制了 puntaje mínimo - usar valor real
+        # Redondear a 2 decimales
+        puntaje_total = round(puntaje_total, 2)
+        
         # Actualizar simulacro
         cur.execute("""
             UPDATE simulacros SET puntaje_total = %s, estado = 'finalizado' 
