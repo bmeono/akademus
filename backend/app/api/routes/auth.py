@@ -402,8 +402,25 @@ async def google_callback(code: str = None, error: str = None):
     if not activo:
         return RedirectResponse(url="https://www.akademus.online/login?error=account_inactive")
     
-    access_token = create_access_token({"user_id": user_id, "email": email, "type": "access"})
-    refresh_token = create_refresh_token({"user_id": user_id, "type": "refresh"})
+    # Crear sesión en la base de datos
+    conn = get_db_connection()
+    cur = conn.cursor()
+    jti = str(uuid.uuid4())
+    expira = datetime.utcnow() + timedelta(days=7)
+    cur.execute(
+        "INSERT INTO sesiones (jti, usuario_id, expira_en, estado) VALUES (%s, %s, %s, 'activa')",
+        (jti, user_id, expira),
+    )
+    cur.execute(
+        "UPDATE usuarios SET ultimo_login = %s WHERE id = %s",
+        (datetime.utcnow(), user_id),
+    )
+    conn.commit()
+    conn.close()
+    
+    # Crear tokens con formato correcto (sub + jti)
+    access_token = create_access_token({"sub": str(user_id), "jti": jti})
+    refresh_token = create_refresh_token({"sub": str(user_id), "jti": jti})
     
     return RedirectResponse(
         url=f"https://www.akademus.online/login?access_token={access_token}&refresh_token={refresh_token}&google_login=true"
@@ -516,7 +533,7 @@ async def verify_2fa(data: OTPVerify):
 
     # Crea tokens
     access_token = create_access_token({"sub": str(user_id), "jti": jti})
-    refresh_token = create_refresh_token({"sub": str(user_id)})
+    refresh_token = create_refresh_token({"sub": str(user_id), "jti": jti})
 
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
 
