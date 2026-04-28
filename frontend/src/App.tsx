@@ -21,7 +21,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function ExternalRedirect({ url }: { url: string }) {
-  window.location.href = url;
+  const search = window.location.search;
+  const targetUrl = search ? `${url}${search}` : url;
+  window.location.href = targetUrl;
   return null;
 }
 
