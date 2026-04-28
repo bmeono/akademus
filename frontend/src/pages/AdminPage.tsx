@@ -138,8 +138,8 @@ export default function AdminPage() {
   const [busqueda, setBusqueda] = useState('');
   const [filtroGrupo, setFiltroGrupo] = useState<string>('todos');
   const [filtroEstado, setFiltroEstado] = useState<string>('');
-
-const tabs = [
+  const [permisosEditando, setPermisosEditando] = useState<Record<string, Record<string, boolean>>>({});
+  const navigate = useNavigate();
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'usuarios', label: 'Usuarios', icon: Users },
     { id: 'permisos', label: 'Permisos', icon: Settings },
@@ -1121,11 +1121,8 @@ const tabs = [
               </div>
             )}
           </div>
-        );
+);
       case 'permisos':
-        // Estado local para permisos editables
-        const [permisosEditando, setPermisosEditando] = useState<Record<string, Record<string, boolean>>({});
-        
         const getPermisoEditando = (usuarioId: string, seccion: string, valorOriginal: boolean) => {
           if (permisosEditando[usuarioId]?.[seccion] !== undefined) {
             return permisosEditando[usuarioId][seccion];
