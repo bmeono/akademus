@@ -61,8 +61,11 @@ class Settings(BaseSettings):
     otp_expire_minutes: int = 10
     otp_max_attempts: int = 3
     twilio_account_sid: str = ""
-    twilio_auth_token: str = ""
-    twilio_phone_number: str = ""
+    twilio_phone_number: str = "" 
+    
+    # Google OAuth - configurar en variables de entorno GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET
+    google_client_id: str = os.getenv("GOOGLE_CLIENT_ID", "")
+    google_client_secret: str = os.getenv("GOOGLE_CLIENT_SECRET", "")
 
     class Config:
         env_file = ".env"
