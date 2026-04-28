@@ -333,42 +333,53 @@ async def google_login():
 @router.get("/google/callback")
 async def google_callback(code: str = None, error: str = None):
     """Callback de Google OAuth."""
-    import httpx
+    print(f"[GOOGLE_CALLBACK] code={code[:20] if code else None}..., error={error}")
     
     if error or not code:
         from fastapi import RedirectResponse
         return RedirectResponse(url="/login?error=google_auth_failed")
     
-    # Intercambia code por tokens
-    token_url = "https://oauth2.googleapis.com/token"
-    data = {
-        "client_id": settings.google_client_id,
-        "client_secret": settings.google_client_secret,
-        "code": code,
-        "grant_type": "authorization_code",
-        "redirect_uri": "https://www.akademus.online/auth/google/callback",
-    }
-    
-    async with httpx.AsyncClient() as client:
-        token_response = await client.post(token_url, data=data)
-        if token_response.status_code != 200:
+    try:
+        import httpx
+        import asyncio
+        
+        # Intercambia code por tokens
+        token_url = "https://oauth2.googleapis.com/token"
+        data = {
+            "client_id": settings.google_client_id,
+            "client_secret": settings.google_client_secret,
+            "code": code,
+            "grant_type": "authorization_code",
+            "redirect_uri": "https://www.akademus.online/auth/google/callback",
+        }
+        
+        print(f"[GOOGLE_CALLBACK] Exchanging code for token...")
+        
+        async with httpx.AsyncClient() as client:
+            token_response = await client.post(token_url, data=data, timeout=30.0)
+            print(f"[GOOGLE_CALLBACK] Token response status: {token_response.status_code}")
+            
+            if token_response.status_code != 200:
+                print(f"[GOOGLE_CALLBACK] Token exchange failed: {token_response.text}")
+                from fastapi import RedirectResponse
+                return RedirectResponse(url="/login?error=token_exchange_failed")
+            
+            tokens = token_response.json()
+            access_token_google = tokens.get("access_token")
+            
+            user_info_url = "https://www.googleapis.com/oauth2/v2/userinfo"
+            user_response = await client.get(user_info_url, headers={"Authorization": f"Bearer {access_token_google}"}, timeout=30.0)
+            user_info = user_response.json()
+        
+        email = user_info.get("email")
+        nombre = user_info.get("name", email.split("@")[0])
+        google_id = user_info.get("id")
+        
+        print(f"[GOOGLE_CALLBACK] User info: {email}")
+        
+        if not email:
             from fastapi import RedirectResponse
-            return RedirectResponse(url="/login?error=token_exchange_failed")
-        
-        tokens = token_response.json()
-        access_token_google = tokens.get("access_token")
-        
-        user_info_url = "https://www.googleapis.com/oauth2/v2/userinfo"
-        user_response = await client.get(user_info_url, headers={"Authorization": f"Bearer {access_token_google}"})
-        user_info = user_response.json()
-    
-    email = user_info.get("email")
-    nombre = user_info.get("name", email.split("@")[0])
-    google_id = user_info.get("id")
-    
-    if not email:
-        from fastapi import RedirectResponse
-        return RedirectResponse(url="/login?error=no_email")
+            return RedirectResponse(url="/login?error=no_email")
     
     # Busca o crea usuario
     conn = get_db_connection()
