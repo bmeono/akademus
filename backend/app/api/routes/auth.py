@@ -3,6 +3,7 @@ import string
 import uuid
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
+from starlette.responses import RedirectResponse
 from psycopg2 import connect
 import sys
 
@@ -336,7 +337,6 @@ async def google_callback(code: str = None, error: str = None):
     print(f"[GOOGLE_CALLBACK] code={code[:20] if code else None}..., error={error}")
     
     if error or not code:
-        from fastapi import RedirectResponse
         return RedirectResponse(url="/login?error=google_auth_failed")
     
     try:
@@ -361,7 +361,6 @@ async def google_callback(code: str = None, error: str = None):
             
             if token_response.status_code != 200:
                 print(f"[GOOGLE_CALLBACK] Token exchange failed: {token_response.text}")
-                from fastapi import RedirectResponse
                 return RedirectResponse(url="/login?error=token_exchange_failed")
             
             tokens = token_response.json()
@@ -378,11 +377,9 @@ async def google_callback(code: str = None, error: str = None):
         print(f"[GOOGLE_CALLBACK] User info: {email}")
         
         if not email:
-            from fastapi import RedirectResponse
             return RedirectResponse(url="/login?error=no_email")
     except Exception as e:
         print(f"[GOOGLE_CALLBACK] Error: {e}")
-        from fastapi import RedirectResponse
         return RedirectResponse(url="/login?error=google_callback_error")
     
     # Busca o crea usuario
@@ -408,19 +405,16 @@ async def google_callback(code: str = None, error: str = None):
     conn.close()
     
     if not user or not user[1]:
-        from fastapi import RedirectResponse
         return RedirectResponse(url="/login?error=account_inactive")
     
-    user_id, activo, two_factor_enabled = user
+    user_id, activo, two_factor_enabled = user[0], user[1], user[2]
     
     if not activo:
-        from fastapi import RedirectResponse
         return RedirectResponse(url="/login?error=account_inactive")
     
     access_token = create_access_token({"user_id": user_id, "email": email, "type": "access"})
     refresh_token = create_refresh_token({"user_id": user_id, "type": "refresh"})
     
-    from fastapi import RedirectResponse
     return RedirectResponse(
         url=f"/login?access_token={access_token}&refresh_token={refresh_token}&google_login=true"
     )
