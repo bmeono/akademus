@@ -101,17 +101,10 @@ export default function SimulacroSession() {
     console.log('Enviando respuestas:', respuestasArray.length);
 
     try {
-      const response = await fetch('http://127.0.0.1:8001/simulacros/' + simulacroId + '/finalizar', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('access_token')
-        },
-        body: JSON.stringify({ respuestas: respuestasArray })
-      });
+      const response = await api.post('/simulacros/' + simulacroId + '/finalizar', { respuestas: respuestasArray });
       
       console.log('Status:', response.status);
-      const data = await response.json();
+      const data = response.data;
       console.log('Respuesta completa:', data);
       console.log('errores en data:', data.errores);
       

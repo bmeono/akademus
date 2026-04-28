@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAppStore } from '../store';
-import { usersAPI, adminAPI } from '../services/api';
+import { usersAPI, adminAPI, api } from '../services/api';
+import { usersAPI as authService } from '../services/api';
 import { LayoutDashboard, BookOpen, Brain, PenTool, LogOut, User, Settings, AlertTriangle } from 'lucide-react';
 
 export default function DashboardLayout() {
@@ -36,10 +37,7 @@ setPermisos({ dashboard: true, simulacros: true, temas_debiles: true, flashcards
 
   const handleLogout = async () => {
     try {
-      await fetch('http://127.0.0.1:8001/auth/logout', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
-      });
+      await authService.logout();
     } catch {}
     localStorage.clear();
     logout();
