@@ -1123,43 +1123,92 @@ const tabs = [
           </div>
         );
       case 'permisos':
+        // Estado local para permisos editables
+        const [permisosEditando, setPermisosEditando] = useState<Record<string, Record<string, boolean>>({});
+        
+        const getPermisoEditando = (usuarioId: string, seccion: string, valorOriginal: boolean) => {
+          if (permisosEditando[usuarioId]?.[seccion] !== undefined) {
+            return permisosEditando[usuarioId][seccion];
+          }
+          return valorOriginal;
+        };
+        
+        const togglePermisoEditando = (usuarioId: string, seccion: string, valorOriginal: boolean) => {
+          setPermisosEditando(prev => ({
+            ...prev,
+            [usuarioId]: {
+              ...(prev[usuarioId] || {}),
+              [seccion]: !getPermisoEditando(usuarioId, seccion, valorOriginal)
+            }
+          }));
+        };
+        
+        const guardarPermisos = async (usuarioId: string) => {
+          const cambios = permisosEditando[usuarioId];
+          if (!cambios) return;
+          
+          for (const [seccion, tieneAcceso] of Object.entries(cambios)) {
+            await adminAPI.updatePermiso({
+              usuario_id: usuarioId,
+              seccion: seccion,
+              tiene_acceso: tieneAcceso
+            });
+          }
+          
+          setPermisosEditando(prev => {
+            const newState = { ...prev };
+            delete newState[usuarioId];
+            return newState;
+          });
+          
+          loadData();
+        };
+        
         return (
           <div className="space-y-4">
             <p className="text-slate-600">Administra los permisos de acceso de cada usuario.</p>
-            {usuarios.map(u => (
-              <Card key={u.id} className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <p className="font-semibold">{u.nombre}</p>
-                    <p className="text-sm text-slate-500">{u.email}</p>
+            {usuarios.map(u => {
+              const tieneCambios = permisosEditando[u.id] && Object.keys(permisosEditando[u.id]).length > 0;
+              return (
+                <Card key={u.id} className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <p className="font-semibold">{u.nombre}</p>
+                      <p className="text-sm text-slate-500">{u.email}</p>
+                    </div>
+                    <button
+                      onClick={() => guardarPermisos(u.id)}
+                      disabled={!tieneCambios}
+                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                        tieneCambios 
+                          ? 'bg-primary-600 text-white hover:bg-primary-700' 
+                          : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                      }`}
+                    >
+                      Actualizar
+                    </button>
                   </div>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {['dashboard', 'simulacros', 'temas_debiles', 'flashcards'].map(seccion => {
-                    const perm = (u.permisos || []).find((p: any) => p.seccion === seccion);
-                    const tieneAcceso = perm?.tiene_acceso !== false;
-                    return (
-                      <label key={seccion} className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={tieneAcceso}
-                          onChange={async (e) => {
-                            await adminAPI.updatePermiso({
-                              usuario_id: u.id,
-                              seccion: seccion,
-                              tiene_acceso: e.target.checked
-                            });
-                            loadData();
-                          }}
-                          className="w-4 h-4 rounded text-primary-600"
-                        />
-                        <span className="text-sm capitalize">{seccion.replace('_', ' ')}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </Card>
-            ))}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {['dashboard', 'simulacros', 'temas_debiles', 'flashcards'].map(seccion => {
+                      const perm = (u.permisos || []).find((p: any) => p.seccion === seccion);
+                      const valorOriginal = perm?.tiene_acceso !== false;
+                      const valorEditado = getPermisoEditando(u.id, seccion, valorOriginal);
+                      return (
+                        <label key={seccion} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={valorEditado}
+                            onChange={() => togglePermisoEditando(u.id, seccion, valorOriginal)}
+                            className="w-4 h-4 rounded text-primary-600"
+                          />
+                          <span className="text-sm capitalize">{seccion.replace('_', ' ')}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         );
       default:
