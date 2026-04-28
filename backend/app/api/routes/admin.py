@@ -534,8 +534,8 @@ async def get_usuarios_permisos(current_user: dict = Depends(require_role([1])))
         conn = get_db_connection()
         cur = conn.cursor()
         
-        # Obtener usuarios
-        cur.execute("SELECT id, email, rol_id FROM usuarios WHERE rol_id != 2 ORDER BY email")
+        # Obtener todos los usuarios
+        cur.execute("SELECT id, nombre_completo, email, rol_id FROM usuarios ORDER BY email")
         rows = cur.fetchall()
         
         usuarios = []
@@ -549,9 +549,9 @@ async def get_usuarios_permisos(current_user: dict = Depends(require_role([1])))
             
             usuarios.append({
                 "id": usuario_id,
-                "nombre": r[1],  # usar email como nombre
-                "email": r[1],
-                "rol_id": r[2],
+                "nombre": r[1] or r[2],  # nombre o email
+                "email": r[2],
+                "rol_id": r[3],
                 "permisos": [{"seccion": k, "tiene_acceso": v} for k, v in permisos.items()]
             })
         
