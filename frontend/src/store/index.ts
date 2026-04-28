@@ -94,10 +94,10 @@ export const useSimulacroStore = create<SimulacroState>()((set) => ({
 // Store para flashcards
 interface FlashcardState {
   flashcardActual: number;
- Total: number;
+  total: number;
   mostrandoDorso: boolean;
   
-  setFlashcard: (index: number, total: number) => void;
+  setFlashcard: (index: number, total?: number) => void;
   toggleDorso: () => void;
   siguiente: () => void;
   reset: () => void;
