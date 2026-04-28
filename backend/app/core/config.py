@@ -42,9 +42,9 @@ class Settings(BaseSettings):
     app_name: str = "Akademus"
     app_version: str = "1.0.0"
 
-    # PostgreSQL connection (Supabase production - pooler)
+    # PostgreSQL connection (Supabase production)
     db_host: str = "db.czhvprbxvhqpprgaiqjd.supabase.co"
-    db_port: int = 6543
+    db_port: int = 5432
     db_user: str = "postgres"
     db_password: str = "1323Bri@ncisc0"
     db_name: str = "postgres"
