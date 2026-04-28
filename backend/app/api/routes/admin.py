@@ -592,62 +592,41 @@ async def get_mis_permisos(credentials = Depends(http_bearer)):
     from app.core.security import decode_token
     
     if not credentials:
-        return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True}
+        return {"dashboard": False, "simulacros": False, "temas_debiles": False, "flashcards": False, "admin": False}
     
     token = credentials.credentials
     try:
         payload = decode_token(token)
     except:
-        return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True}
+        return {"dashboard": False, "simulacros": False, "temas_debiles": False, "flashcards": False, "admin": False}
     
     user_id = payload.get("sub")
     if not user_id:
-        return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True}
-    
-    rol_id = payload.get("rol", 1)
-    
-    if rol_id == 2:
-        return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True}
+        return {"dashboard": False, "simulacros": False, "temas_debiles": False, "flashcards": False, "admin": False}
     
     try:
         conn = get_db_connection()
         cur = conn.cursor()
+        
+        # Get rol_id del usuario
+        cur.execute("SELECT rol_id FROM usuarios WHERE id = %s", (user_id,))
+        user_row = cur.fetchone()
+        rol_id = user_row[0] if user_row else 2
+        
+        # Admin (rol_id=1) tiene todos los permisos
+        if rol_id == 1:
+            return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True, "feynman": True, "admin": True}
+        
+        # Get permisos de la DB
         cur.execute("SELECT seccion, tiene_acceso FROM usuario_permisos WHERE usuario_id = %s", (user_id,))
         rows = cur.fetchall()
         permisos = {r[0]: r[1] for r in rows}
         conn.close()
         
-        if not permisos:
-            return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True}
-        return permisos
-    except:
-        return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True}
-    
-    token = credentials.credentials
-    try:
-        payload = decode_token(token)
-    except:
-        return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True}
-    
-    user_id = payload.get("sub")
-    if not user_id:
-        return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True}
-    
-    rol_id = payload.get("rol", 1)
-    
-    if rol_id == 2:
-        return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True}
-    
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT seccion, tiene_acceso FROM usuario_permisos WHERE usuario_id = %s", (user_id,))
-        rows = cur.fetchall()
-        permisos = {r[0]: r[1] for r in rows}
-        conn.close()
+if not permisos:
+            # Default para usuarios sin permisos definidos
+            return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True, "feynman": True, "admin": False}
         
-        if not permisos:
-            return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True}
         return permisos
     except:
-        return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True}
+        return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True, "feynman": True, "admin": False}
