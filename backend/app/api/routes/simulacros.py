@@ -469,7 +469,7 @@ async def responder_pregunta(
                 "SELECT id, pregunta_id, texto FROM opciones WHERE pregunta_id = %s",
                 (sig_pregunta[0],),
             )
-opciones = [
+            opciones = [
                 OpcionResponse(id=r[0], pregunta_id=r[1], texto=r[2])
                 for r in cur.fetchall()
             ]
