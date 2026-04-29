@@ -469,15 +469,15 @@ async def responder_pregunta(
                 "SELECT id, pregunta_id, texto FROM opciones WHERE pregunta_id = %s",
                 (sig_pregunta[0],),
             )
-            opciones = [
+opciones = [
                 OpcionResponse(id=r[0], pregunta_id=r[1], texto=r[2])
                 for r in cur.fetchall()
             ]
-siguiente = PreguntaCompletaResponse(
+            siguiente = PreguntaCompletaResponse(
                 pregunta=PreguntaResponse(
                     id=sig_pregunta[0],
                     tema_id=sig_pregunta[1],
-                    enunciado=sig_pregunta[2],
+                    enunciado=sig_preunta[2],
                     explicacion=sig_pregunta[3],
                     imagen_url=sig_pregunta[4],
                     dificultad=sig_pregunta[5],
