@@ -322,7 +322,7 @@ async def get_todas_preguntas(
         tiempo_restante = duracion_segundos
 
     # Obtiene todas las preguntas
-cur.execute("""
+    cur.execute("""
         SELECT p.id, p.enunciado, p.explicacion, p.imagen_url, p.dificultad, r.orden, r.puntaje_pregunta, p.universidad, p.an_exam
         FROM preguntas p
         JOIN respuestas_simulacro r ON r.pregunta_id = p.id
