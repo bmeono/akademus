@@ -5,27 +5,12 @@ import bcrypt
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from psycopg2 import connect
 
 from .config import get_settings
+from .db import get_db_connection
 
 
 settings = get_settings()
-
-
-def get_db_connection():
-    """
-    Obtiene conexión a PostgreSQL.
-    Se crea una nueva conexión por cada request.
-    """
-    return connect(
-        host=settings.db_host,
-        port=settings.db_port,
-        user=settings.db_user,
-        password=settings.db_password,
-        database=settings.db_name,
-        sslmode=settings.db_sslmode if hasattr(settings, 'db_sslmode') else 'disable',
-    )
 
 
 def hash_password(password: str) -> str:

@@ -1,11 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from psycopg2 import connect
 from typing import List
-import sys
-
-sys.path.insert(0, "C:/Users/Brian/Desktop/akademus/backend")
-
-from app.core.config import get_settings
+from app.core.db import get_db_connection
 from app.core.security import get_current_user
 from app.schemas import (
     UserResponse,
@@ -15,19 +10,7 @@ from app.schemas import (
     ErrorResponse,
 )
 
-
-settings = get_settings()
 router = APIRouter(prefix="/users", tags=["Usuarios"])
-
-
-def get_db_connection():
-    return connect(
-        host=settings.db_host,
-        port=settings.db_port,
-        user=settings.db_user,
-        password=settings.db_password,
-        database=settings.db_name,
-    )
 
 
 @router.get("/me", response_model=UserResponse)
@@ -186,10 +169,27 @@ async def get_mis_preguntas(current_user: dict = Depends(get_current_user)):
                 ORDER BY p.id DESC""", (user_id,))
     rows = cur.fetchall()
     
+    # Obtener todas las opciones en una sola query
+    pregunta_ids = [r[0] for r in rows]
+    if pregunta_ids:
+        cur.execute("""
+            SELECT pregunta_id, id, texto, es_correcta 
+            FROM opciones 
+            WHERE pregunta_id = ANY(%s)
+            ORDER BY pregunta_id, id
+        """, (pregunta_ids,))
+        opciones_dict = {}
+        for o in cur.fetchall():
+            pid = o[0]
+            if pid not in opciones_dict:
+                opciones_dict[pid] = []
+            opciones_dict[pid].append({"id": o[1], "texto": o[2], "es_correcta": o[3]})
+    else:
+        opciones_dict = {}
+    
     result = []
     for r in rows:
-        cur.execute("SELECT id, texto, es_correcta FROM opciones WHERE pregunta_id = %s", (r[0],))
-        opts = [{"id": o[0], "texto": o[1], "es_correcta": o[2]} for o in cur.fetchall()]
+        opts = opciones_dict.get(r[0], [])
         result.append({
             "id": r[0], "asignatura_id": r[1], "enunciado": r[2], "explicacion": r[3],
             "dificultad": r[4], "estado": r[5], "motivo_rechazo": r[6], "asignatura_nombre": r[7], "opciones": opts

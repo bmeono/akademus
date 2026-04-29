@@ -30,8 +30,13 @@ async def lifespan(app: FastAPI):
         print(f"Conexión a PostgreSQL: OK (host={settings.db_host}, port={settings.db_port})")
     except Exception as e:
         print(f"Conexión a PostgreSQL: ERROR - {e}")
+    
     yield
-    print("Cerrando aplicación")
+    
+    # Cerrar pool de conexiones alshutdown
+    from app.core.db import close_pool
+    close_pool()
+    print("Cerrando aplicación - pool de conexiones cerrado")
 
 
 app = FastAPI(

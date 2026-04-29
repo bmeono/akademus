@@ -1,14 +1,8 @@
 import random
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Request, Body
-from psycopg2 import connect
 from typing import List, Optional
-
-import sys
-
-sys.path.insert(0, "C:/Users/Brian/Desktop/akademus/backend")
-
-from app.core.config import get_settings
+from app.core.db import get_db_connection
 from app.core.security import get_current_user
 from app.schemas import (
     SimulacroConfig,
@@ -22,21 +16,8 @@ from app.schemas import (
     OpcionResponse,
 )
 from pydantic import BaseModel
-from typing import List
 
-
-settings = get_settings()
 router = APIRouter(prefix="/simulacros", tags=["Simulacros"])
-
-
-def get_db_connection():
-    return connect(
-        host=settings.db_host,
-        port=settings.db_port,
-        user=settings.db_user,
-        password=settings.db_password,
-        database=settings.db_name,
-    )
 
 
 @router.get("/config")

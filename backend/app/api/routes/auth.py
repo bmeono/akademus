@@ -4,12 +4,7 @@ import uuid
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from starlette.responses import RedirectResponse
-from psycopg2 import connect
-import sys
-
-sys.path.insert(0, "C:/Users/Brian/Desktop/akademus/backend")
-
-from app.core.config import get_settings
+from app.core.db import get_db_connection
 from app.core.security import (
     hash_password,
     verify_password,
@@ -17,6 +12,7 @@ from app.core.security import (
     create_refresh_token,
     decode_token,
     get_current_user,
+    get_settings,
 )
 from app.schemas import (
     UserRegister,
@@ -27,20 +23,8 @@ from app.schemas import (
     ErrorResponse,
 )
 
-
 settings = get_settings()
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
-
-
-def get_db_connection():
-    """Obtiene conexión a PostgreSQL."""
-    return connect(
-        host=settings.db_host,
-        port=settings.db_port,
-        user=settings.db_user,
-        password=settings.db_password,
-        database=settings.db_name,
-    )
 
 
 def generar_codigo_otp() -> str:

@@ -1,25 +1,9 @@
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException
-from psycopg2 import connect
-import sys
-
-sys.path.insert(0, "C:/Users/Brian/Desktop/akademus/backend")
-
-from app.core.config import get_settings
+from app.core.db import get_db_connection
 from app.core.security import get_current_user
 
-settings = get_settings()
 router = APIRouter(prefix="/flashcards", tags=["Flashcards"])
-
-
-def get_db_connection():
-    return connect(
-        host=settings.db_host,
-        port=settings.db_port,
-        user=settings.db_user,
-        password=settings.db_password,
-        database=settings.db_name,
-    )
 
 
 def create_flashcards_tables():
@@ -27,12 +11,38 @@ def create_flashcards_tables():
     conn = get_db_connection()
     cur = conn.cursor()
     
-    # Primero borrar si existe
-    cur.execute("DROP TABLE IF EXISTS flashcards CASCADE")
-    cur.execute("DROP TABLE IF EXISTS flashcard_historial CASCADE")
-    
-    # Tabla flashcards - sin foreign keys para evitar errores
+    # Crear tablas si no existen (NO borrar)
     cur.execute("""
+        CREATE TABLE IF NOT EXISTS flashcards (
+            id SERIAL PRIMARY KEY,
+            usuario_id UUID NOT NULL,
+            pregunta_id INTEGER NOT NULL,
+            estado VARCHAR(20) DEFAULT 'activa',
+            respondida BOOLEAN DEFAULT FALSE,
+            respondida_correcta BOOLEAN DEFAULT FALSE,
+            facilidad INTEGER DEFAULT 2500,
+            intervalo INTEGER DEFAULT 1,
+            repeticiones INTEGER DEFAULT 0,
+            proxima_revision DATE DEFAULT CURRENT_DATE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(usuario_id, pregunta_id)
+        )
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS flashcard_historial (
+            id SERIAL PRIMARY KEY,
+            flashcard_id INTEGER NOT NULL,
+            usuario_id UUID NOT NULL,
+            calidad_respuesta INTEGER,
+            tiempo_respuesta INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
         CREATE TABLE flashcards (
             id SERIAL PRIMARY KEY,
             usuario_id UUID NOT NULL,
