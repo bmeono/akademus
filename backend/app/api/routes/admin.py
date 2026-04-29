@@ -571,22 +571,27 @@ class PermisoUpdate(BaseModel):
 @router.put("/usuarios-permisos")
 async def update_usuario_permiso(data: PermisoUpdate, current_user: dict = Depends(require_role([1]))):
     """Actualiza el permiso de un usuario para una sección."""
+    from psycopg2.extras import RealDictCursor
     conn = get_db_connection()
     cur = conn.cursor()
     
-    # Convertir a integer
-    usuario_id = int(data.usuario_id)
-    
-    cur.execute("""
-        INSERT INTO usuario_permisos (usuario_id, seccion, tiene_acceso)
-        VALUES (%s, %s, %s)
-        ON CONFLICT (usuario_id, seccion)
-        DO UPDATE SET tiene_acceso = %s
-    """, (usuario_id, data.seccion, data.tiene_acceso, data.tiene_acceso))
-    
-    conn.commit()
-    conn.close()
-    return {"usuario_id": str(usuario_id), "seccion": data.seccion, "tiene_acceso": data.tiene_acceso}
+    try:
+        usuario_id = int(data.usuario_id)
+        
+        cur.execute("""
+            INSERT INTO usuario_permisos (usuario_id, seccion, tiene_acceso)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (usuario_id, seccion)
+            DO UPDATE SET tiene_acceso = %s
+        """, (usuario_id, data.seccion, data.tiene_acceso, data.tiene_acceso))
+        
+        conn.commit()
+        return {"usuario_id": str(usuario_id), "seccion": data.seccion, "tiene_acceso": data.tiene_acceso}
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        conn.close()
 
 
 @router.get("/mis-permisos")
