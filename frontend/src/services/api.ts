@@ -88,6 +88,10 @@ export const simulacrosAPI = {
   responder: (id: number, data: any) => api.post(`/simulacros/${id}/responder`, data),
   finalizar: (id: number, respuestas: any[]) => api.post(`/simulacros/${id}/finalizar`, { respuestas }),
   historial: () => api.get('/simulacros/historial'),
+  downloadResultadoPDF: (id: number) => {
+    const token = localStorage.getItem('access_token');
+    window.open(`https://akademus.onrender.com/simulacros/${id}/resultado-pdf?token=${token}`, '_blank');
+  },
 };
 
 // Flashcards

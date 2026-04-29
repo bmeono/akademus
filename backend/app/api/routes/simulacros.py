@@ -700,3 +700,169 @@ async def get_resultado(simulacro_id: int, current_user: dict = Depends(get_curr
         "sin_responder": resultado[3] or 0,
         "puntaje_total": max(0, float(resultado[4])),
     }
+
+
+@router.get("/{simulacro_id}/resultado-pdf")
+async def download_resultado_pdf(simulacro_id: int, token: str = None, current_user: dict = Depends(get_current_user)):
+    """Genera PDF con los resultados del simulacro."""
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import letter
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    from io import BytesIO
+    
+    user_id = current_user["id"]
+    
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    # Obtener datos del usuario
+    cur.execute("SELECT nombre_completo FROM usuarios WHERE id = %s", (user_id,))
+    user_row = cur.fetchone()
+    nombre_usuario = user_row[0] if user_row and user_row[0] else "Usuario"
+    
+    # Obtener datos del simulacro
+    cur.execute("""
+        SELECT s.especialidad_id, e.nombre, s.estado, s.puntaje_total, s.fecha_inicio
+        FROM simulacros s
+        LEFT JOIN especialidades e ON s.especialidad_id = e.id
+        WHERE s.id = %s AND s.usuario_id = %s
+    """, (simulacro_id, user_id))
+    sim_row = cur.fetchone()
+    if not sim_row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Simulacro no encontrado")
+    
+    especialidad = sim_row[1] or "General"
+    
+    # Obtener resultados por asignatura
+    cur.execute("""
+        SELECT 
+            a.nombre as asignatura,
+            COUNT(*) as total,
+            SUM(CASE WHEN rd.es_correcta THEN 1 ELSE 0 END) as aciertos,
+            SUM(CASE WHEN NOT rd.es_correcta AND rd.opcion_seleccionada_id IS NOT NULL THEN 1 ELSE 0 END) as errores,
+            SUM(CASE WHEN rd.opcion_seleccionada_id IS NULL THEN 1 ELSE 0 END) as blancos,
+            SUM(rd.puntaje_obtenido) as puntaje
+        FROM resultados_detalle rd
+        JOIN preguntas p ON rd.pregunta_id = p.id
+        LEFT JOIN asignaturas a ON p.asignatura_id = a.id
+        WHERE rd.simulacro_id = %s
+        GROUP BY a.id, a.nombre
+        ORDER BY a.orden, a.nombre
+    """, (simulacro_id,))
+    resultados_asignatura = cur.fetchall()
+    
+    # Obtener total general
+    cur.execute("""
+        SELECT 
+            COUNT(*) as total,
+            SUM(CASE WHEN es_correcta THEN 1 ELSE 0 END) as aciertos,
+            SUM(CASE WHEN NOT es_correcta AND opcion_seleccionada_id IS NOT NULL THEN 1 ELSE 0 END) as errores,
+            SUM(CASE WHEN opcion_seleccionada_id IS NULL THEN 1 ELSE 0 END) as blancos,
+            COALESCE(SUM(puntaje_obtenido), 0) as puntaje
+        FROM resultados_detalle
+        WHERE simulacro_id = %s
+    """, (simulacro_id,))
+    total_row = cur.fetchone()
+    
+    conn.close()
+    
+    # Crear PDF en memoria
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch)
+    elements = []
+    styles = getSampleStyleSheet()
+    
+    # Estilo para标题
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        textColor=colors.HexColor("#1e40af"),
+        spaceAfter=20,
+        alignment=1
+    )
+    
+    subtitle_style = ParagraphStyle(
+        'CustomSubtitle',
+        parent=styles['Heading2'],
+        fontSize=14,
+        textColor=colors.HexColor("#475569"),
+        spaceAfter=30,
+        alignment=1
+    )
+    
+    # Fondo con watermark (simulado con color de fondo)
+    from reportlab.pdfgen import canvas
+    pdf = canvas.Canvas(buffer)
+    pdf.setFillColor(colors.HexColor("#f0f9ff"))
+    pdf.rect(0, 0, letter[0], letter[1], fill=1, stroke=0)
+    
+    # Logo Akademus (texto como marca de agua)
+    pdf.setFillColor(colors.HexColor("#bfdbfe"))
+    pdf.setFont("Helvetica-Bold", 60)
+    pdf.saveState()
+    pdf.translate(50, 300)
+    pdf.rotate(45)
+    pdf.drawCentredString(0, 0, "AKADEMUS")
+    pdf.restoreState()
+    
+    # Continuar con elementos del documento
+    elements.append(Paragraph("AKADEMUS", title_style))
+    elements.append(Paragraph(f"SIMULACRO DE EXAMEN - {especialidad}", subtitle_style))
+    elements.append(Paragraph(f"NOMBRE: {nombre_usuario}", ParagraphStyle('Nombre', parent=styles['Normal'], fontSize=12, spaceAfter=20)))
+    
+    # Tabla de resultados
+    data = [["Nº", "Asignatura", "Total", "Aciertos", "Errores", "Blancos", "Puntaje"]]
+    
+    total_puntaje = 0
+    for idx, row in enumerate(resultados_asignatura, 1):
+        data.append([
+            str(idx),
+            row[0] or "Sin asignar",
+            str(row[1]),
+            str(row[2] or 0),
+            str(row[3] or 0),
+            str(row[4] or 0),
+            f"{(row[5] or 0):.2f}"
+        ])
+        total_puntaje += (row[5] or 0)
+    
+    # Fila de total
+    data.append(["", "", str(total_row[0]), str(total_row[1]), str(total_row[2]), str(total_row[3]), f"{total_row[4]:.2f}"])
+    
+    tabla = Table(data, colWidths=[0.4*inch, 2*inch, 0.7*inch, 0.7*inch, 0.7*inch, 0.7*inch, 1*inch])
+    
+    estilo_tabla = TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#1e40af")),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -2), colors.white),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor("#e0f2fe")),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('GRID', (0, 0), (-1, -1), 1, colors.slate),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ])
+    
+    tabla.setStyle(estilo_tabla)
+    elements.append(tabla)
+    elements.append(Spacer(1, 20))
+    elements.append(Paragraph(f"<b>TOTAL PUNTAJE OBTENIDO: {total_row[4]:.2f}</b>", ParagraphStyle('Total', parent=styles['Normal'], fontSize=14, textColor=colors.HexColor("#1e40af"), alignment=2)))
+    
+    doc.build(elements)
+    
+    buffer.seek(0)
+    
+    from fastapi.responses import StreamingResponse
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=resultado_simulacro_{simulacro_id}.pdf"}
+    )
