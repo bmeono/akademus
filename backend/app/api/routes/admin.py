@@ -16,8 +16,8 @@ class CursoCreate(BaseModel): nombre: str; descripcion: str = None; orden: int =
 class CursoUpdate(BaseModel): nombre: str = None; descripcion: str = None; orden: int = None; imagen_url: str = None; activo: bool = None
 class TemaCreate(BaseModel): nombre: str; curso_id: int; dificultad_base: int = 3; imagen_url: str = None
 class TemaUpdate(BaseModel): nombre: str = None; curso_id: int = None; dificultad_base: int = None; imagen_url: str = None; activo: bool = None
-class PreguntaCreate(BaseModel): tema_id: int = None; asignatura_id: int = None; enunciado: str; explicacion: str = None; dificultad: int = 3; tipo_id: int = None; activa: bool = True; imagen_url: str = None; usuario_id: int = None
-class PreguntaUpdate(BaseModel): tema_id: int = None; asignatura_id: int = None; enunciado: str = None; explicacion: str = None; dificultad: int = None; tipo_id: int = None; activa: bool = None; imagen_url: str = None; estado: str = None; motivo_rechazo: str = None
+class PreguntaCreate(BaseModel): tema_id: int = None; asignatura_id: int = None; enunciado: str; explicacion: str = None; dificultad: int = 3; tipo_id: int = None; activa: bool = True; imagen_url: str = None; usuario_id: int = None; universidad: str = 'UNPRG'; an_exam: str = None
+class PreguntaUpdate(BaseModel): tema_id: int = None; asignatura_id: int = None; enunciado: str = None; explicacion: str = None; dificultad: int = None; tipo_id: int = None; activa: bool = None; imagen_url: str = None; estado: str = None; motivo_rechazo: str = None; universidad: str = None; an_exam: str = None
 class OpcionCreate(BaseModel): texto: str; es_correcta: bool; activa: bool = True
 class OpcionUpdate(BaseModel): texto: str = None; es_correcta: bool = None; activa: bool = None
 class BloqueCreate(BaseModel): codigo: str; nombre: str; descripcion: str = None; orden: int = 0
@@ -185,7 +185,7 @@ def get_preguntas(estado: str = None, tema_id: int = None, asignatura_id: int = 
         print(f"DEBUG: estado={estado}, tema_id={tema_id}, asignatura_id={asignatura_id}")
         
         # Por defecto mostrar aprobadas
-        sql = "SELECT p.id, p.tema_id, p.asignatura_id, p.enunciado, p.explicacion, p.imagen_url, p.dificultad, p.tipo_id, p.activa, COALESCE(a.nombre, t.nombre, 'Sin asignar'), COALESCE(tp.nombre, 'Estandar'), a.nombre, p.estado, p.motivo_rechazo, p.usuario_id, NULL FROM preguntas p LEFT JOIN temas t ON p.tema_id = t.id LEFT JOIN asignaturas a ON p.asignatura_id = a.id LEFT JOIN tipos_pregunta tp ON p.tipo_id = tp.id"
+        sql = "SELECT p.id, p.tema_id, p.asignatura_id, p.enunciado, p.explicacion, p.imagen_url, p.dificultad, p.tipo_id, p.activa, COALESCE(a.nombre, t.nombre, 'Sin asignar'), COALESCE(tp.nombre, 'Estandar'), a.nombre, p.estado, p.motivo_rechazo, p.usuario_id, NULL, p.universidad, p.an_exam FROM preguntas p LEFT JOIN temas t ON p.tema_id = t.id LEFT JOIN asignaturas a ON p.asignatura_id = a.id LEFT JOIN tipos_pregunta tp ON p.tipo_id = tp.id"
         
         if estado == 'aprobado':
             sql += " WHERE p.estado = 'aprobado' OR p.estado IS NULL"
@@ -202,7 +202,7 @@ def get_preguntas(estado: str = None, tema_id: int = None, asignatura_id: int = 
         conn.close()
         return [{"id": str(r[0]), "tema_id": r[1], "asignatura_id": r[2], "enunciado": r[3], "explicacion": r[4], "imagen_url": r[5], 
                 "dificultad": r[6], "tipo_id": r[7], "activa": r[8], "tema_nombre": r[9], "tipo_nombre": r[10], 
-                "asignatura_nombre": r[11], "estado": r[12], "motivo_rechazo": r[13], "usuario_id": r[14], "usuario_email": r[15]} for r in rows]
+                "asignatura_nombre": r[11], "estado": r[12], "motivo_rechazo": r[13], "usuario_id": r[14], "usuario_email": r[15], "universidad": r[16], "an_exam": r[17]} for r in rows]
     except Exception as e:
         print(f"ERROR in get_preguntas: {e}")
         raise
@@ -210,7 +210,7 @@ def get_preguntas(estado: str = None, tema_id: int = None, asignatura_id: int = 
 @router.post("/preguntas")
 def create_pregunta(data: PreguntaCreate, current_user: dict = Depends(require_role([1]))):
     conn = get_db_connection(); cur = conn.cursor()
-    cur.execute("INSERT INTO preguntas (tema_id, asignatura_id, enunciado, explicacion, dificultad, tipo_id, activa, imagen_url) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id", (data.tema_id, data.asignatura_id, data.enunciado, data.explicacion, data.dificultad, data.tipo_id, data.activa, data.imagen_url))
+    cur.execute("INSERT INTO preguntas (tema_id, asignatura_id, enunciado, explicacion, dificultad, tipo_id, activa, imagen_url, universidad, an_exam) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id", (data.tema_id, data.asignatura_id, data.enunciado, data.explicacion, data.dificultad, data.tipo_id, data.activa, data.imagen_url, data.universidad, data.an_exam))
     pregunta_id = cur.fetchone()[0]; conn.commit(); conn.close()
     return {"id": str(pregunta_id), "enunciado": data.enunciado}
 
@@ -228,6 +228,8 @@ def update_pregunta(pregunta_id: int, data: PreguntaUpdate, current_user: dict =
     if data.activa is not None: updates.append("activa = %s"); values.append(data.activa)
     if data.estado is not None: updates.append("estado = %s"); values.append(data.estado)
     if data.motivo_rechazo is not None: updates.append("motivo_rechazo = %s"); values.append(data.motivo_rechazo)
+    if data.universidad is not None: updates.append("universidad = %s"); values.append(data.universidad)
+    if data.an_exam is not None: updates.append("an_exam = %s"); values.append(data.an_exam)
     values.append(pregunta_id)
     if updates:
         cur.execute(f"UPDATE preguntas SET {', '.join(updates)} WHERE id = %s", values)

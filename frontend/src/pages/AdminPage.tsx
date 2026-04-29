@@ -575,6 +575,16 @@ export default function AdminPage() {
               <label className="block text-sm font-medium mb-1">Enunciado</label>
               <textarea name="enunciado" defaultValue={editingItem?.enunciado} className="w-full p-2 border rounded" rows={3} required />
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Universidad</label>
+                <input name="universidad" defaultValue={editingItem?.universidad || 'UNPRG'} className="w-full p-2 border rounded" placeholder="UNPRG" />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Año y Tipo</label>
+                <input name="an_exam" defaultValue={editingItem?.an_exam} className="w-full p-2 border rounded" placeholder="2024-I Simulacro" />
+              </div>
+            </div>
             <div className="mb-4">
               <label className="block text-sm font-medium mb-1">URL Imagen (opcional)</label>
               <input name="imagen_url" defaultValue={editingItem?.imagen_url} className="w-full p-2 border rounded" placeholder="https://..." />
@@ -999,6 +1009,8 @@ export default function AdminPage() {
                       <tr className="border-b border-slate-200 bg-slate-50">
                         <th className="text-left py-2 w-12">#</th>
                         <th className="text-left py-2">Enunciado</th>
+                        <th className="text-left py-2 w-24">Universidad</th>
+                        <th className="text-left py-2 w-32">Año/Tipo</th>
                         <th className="text-left py-2 w-20">Dif.</th>
                         <th className="text-left py-2 w-16">Act.</th>
                         <th className="text-left py-2 w-24">Acciones</th>
@@ -1013,6 +1025,8 @@ export default function AdminPage() {
                             {p.imagen_url && <span className="text-xs text-blue-500">📷 Imagen</span>}
                             {duplicates.includes(p.id) && <span className="text-xs text-amber-600 ml-2">⚠️ Duplicada</span>}
                           </td>
+                          <td className="py-2 text-sm">{p.universidad || '-'}</td>
+                          <td className="py-2 text-sm">{p.an_exam || '-'}</td>
                           <td className="py-2">
                             <span className={`px-2 py-1 rounded text-xs ${
                               p.dificultad === 1 ? 'bg-green-100 text-green-700' :
