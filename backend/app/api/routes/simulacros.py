@@ -703,8 +703,26 @@ async def get_resultado(simulacro_id: int, current_user: dict = Depends(get_curr
 
 
 @router.get("/{simulacro_id}/resultado-pdf")
-async def download_resultado_pdf(simulacro_id: int, token: str = None, current_user: dict = Depends(get_current_user)):
-    """Genera PDF con los resultados del simulacro."""
+async def download_resultado_pdf(simulacro_id: int, token: str = None):
+    """
+    Genera PDF con los resultados del simulacro.
+    Acepta token como query parameter.
+    """
+    from fastapi.security import HTTPBearer
+    from app.core.security import decode_token
+    
+    # Si viene token en query, usarlo
+    if not token:
+        raise HTTPException(status_code=401, detail="Token requerido")
+    
+    try:
+        payload = decode_token(token)
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Token inválido: {e}")
+    
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Token sin usuario")
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import letter
     from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
@@ -714,7 +732,7 @@ async def download_resultado_pdf(simulacro_id: int, token: str = None, current_u
     from reportlab.pdfbase.ttfonts import TTFont
     from io import BytesIO
     
-    user_id = current_user["id"]
+    # user_id viene del token ya decodificado arriba
     
     conn = get_db_connection()
     cur = conn.cursor()
