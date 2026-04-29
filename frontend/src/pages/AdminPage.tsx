@@ -1057,6 +1057,7 @@ export default function AdminPage() {
             )}
           </div>
         );
+      }
       case 'novedades': {
         const preguntasPendientes = preguntas.filter(p => p.estado === 'pendiente');
         const preguntasAprobadas = preguntas.filter(p => p.estado === 'aprobado');
