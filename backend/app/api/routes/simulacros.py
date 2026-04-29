@@ -821,10 +821,7 @@ async def download_resultado_pdf(simulacro_id: int, token: str = None):
         blancos = res['blancos']
         
         # Calcular puntaje: acierto * puntaje_pregunta - errores * 1.125 (penalidad)
-        # O usar la suma de puntajes guardados
         puntaje = (aciertos * puntaje_pregunta) - (errores * 1.125)
-        if puntaje < 0:
-            puntaje = 0
             
         resultados_asignatura.append({
             'asignatura': nombre,
