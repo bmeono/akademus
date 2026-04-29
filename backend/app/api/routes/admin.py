@@ -540,7 +540,7 @@ async def get_usuarios_permisos(current_user: dict = Depends(require_role([1])))
         
         usuarios = []
         for r in rows:
-            usuario_id = str(r[0])
+            usuario_id = r[0]  # Ya es UUID string
             
             # Obtener permisos
             cur.execute("SELECT seccion, tiene_acceso FROM usuario_permisos WHERE usuario_id = %s", (usuario_id,))
@@ -571,12 +571,11 @@ class PermisoUpdate(BaseModel):
 @router.put("/usuarios-permisos")
 async def update_usuario_permiso(data: PermisoUpdate, current_user: dict = Depends(require_role([1]))):
     """Actualiza el permiso de un usuario para una sección."""
-    from psycopg2.extras import RealDictCursor
     conn = get_db_connection()
     cur = conn.cursor()
     
     try:
-        usuario_id = int(data.usuario_id)
+        usuario_id = data.usuario_id
         
         cur.execute("""
             INSERT INTO usuario_permisos (usuario_id, seccion, tiene_acceso)
@@ -586,7 +585,7 @@ async def update_usuario_permiso(data: PermisoUpdate, current_user: dict = Depen
         """, (usuario_id, data.seccion, data.tiene_acceso, data.tiene_acceso))
         
         conn.commit()
-        return {"usuario_id": str(usuario_id), "seccion": data.seccion, "tiene_acceso": data.tiene_acceso}
+        return {"usuario_id": usuario_id, "seccion": data.seccion, "tiene_acceso": data.tiene_acceso}
     except Exception as e:
         conn.rollback()
         raise e
