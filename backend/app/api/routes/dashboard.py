@@ -219,22 +219,27 @@ async def get_temas_debiles_detalle(current_user: dict = Depends(get_current_use
     user_id = current_user["id"]
     conn = get_db_connection()
     cur = conn.cursor()
+    
+    try:
+        cur.execute("""
+            SELECT a.id, a.nombre, COUNT(rd.pregunta_id), COUNT(DISTINCT rd.pregunta_id)
+            FROM resultados_detalle rd
+            JOIN simulacros s ON s.id = rd.simulacro_id
+            JOIN preguntas p ON p.id = rd.pregunta_id
+            JOIN asignaturas a ON a.id = p.asignatura_id
+            WHERE s.usuario_id = %s AND rd.es_correcta = FALSE
+            GROUP BY a.id, a.nombre
+            ORDER BY COUNT(rd.pregunta_id) DESC
+        """, (user_id,))
 
-    cur.execute("""
-        SELECT a.id, a.nombre, COUNT(rd.pregunta_id), COUNT(DISTINCT rd.pregunta_id)
-        FROM resultados_detalle rd
-        JOIN simulacros s ON s.id = rd.simulacro_id
-        JOIN preguntas p ON p.id = rd.pregunta_id
-        JOIN asignaturas a ON a.id = p.asignatura_id
-        WHERE s.usuario_id = %s AND rd.es_correcta = FALSE
-        GROUP BY a.id, a.nombre
-        ORDER BY COUNT(rd.pregunta_id) DESC
-    """, (user_id,))
-
-    rows = cur.fetchall()
-    asignaturas = [{"asignatura_id": r[0], "asignatura_nombre": r[1], "total_errores": r[2], "preguntas_falladas": r[3]} for r in rows]
-    conn.close()
-    return {"asignaturas": asignaturas}
+        rows = cur.fetchall()
+        asignaturas = [{"asignatura_id": r[0], "asignatura_nombre": r[1], "total_errores": r[2], "preguntas_falladas": r[3]} for r in rows]
+        return {"asignaturas": asignaturas}
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+    finally:
+        conn.close()
 
 
 @router.get("/temas-debiles/{asignatura_id}/preguntas")
