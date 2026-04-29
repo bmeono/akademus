@@ -938,7 +938,7 @@ async def download_resultado_pdf(simulacro_id: int, token: str = None):
     tabla.setStyle(estilo_tabla)
     elements.append(tabla)
     elements.append(Spacer(1, 20))
-    elements.append(Paragraph(f"<b>TOTAL PUNTAJE OBTENIDO: {puntaje_final:.2f}</b>", ParagraphStyle('Total', parent=styles['Normal'], fontSize=14, textColor=colors.HexColor("#1e40af"), alignment=2)))
+    elements.append(Paragraph(f"<b>TOTAL PUNTAJE OBTENIDO: {round(total_puntaje, 2):.2f}</b>", ParagraphStyle('Total', parent=styles['Normal'], fontSize=14, textColor=colors.HexColor("#1e40af"), alignment=2)))
     
     doc.build(elements)
     
