@@ -674,31 +674,40 @@ async def get_resultado(simulacro_id: int, current_user: dict = Depends(get_curr
     conn = get_db_connection()
     cur = conn.cursor()
 
-    # Obtiene resultado desde la tabla detalle (más rápido)
+    # Obtiene resultado desde la tabla simulacros
+    cur.execute("""
+        SELECT 
+            COALESCE(puntaje_total, 0) as puntaje_total,
+            total_preguntas
+        FROM simulacros
+        WHERE id = %s AND estado = 'finalizado'
+    """, (simulacro_id,))
+    
+    resultado = cur.fetchone()
+    
+    if not resultado:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Resultado no encontrado")
+
+    # Obtener stats desde resultados_detalle
     cur.execute("""
         SELECT 
             COUNT(*) as total,
             SUM(CASE WHEN es_correcta THEN 1 ELSE 0 END) as aciertos,
             SUM(CASE WHEN NOT es_correcta AND opcion_seleccionada_id IS NOT NULL THEN 1 ELSE 0 END) as errores,
-            SUM(CASE WHEN opcion_seleccionada_id IS NULL THEN 1 ELSE 0 END) as sin_responder,
-            COALESCE(SUM(puntaje_obtenido), 0) as puntaje_total
+            SUM(CASE WHEN opcion_seleccionada_id IS NULL THEN 1 ELSE 0 END) as sin_responder
         FROM resultados_detalle
         WHERE simulacro_id = %s
     """, (simulacro_id,))
+    stats = cur.fetchone()
     
-    resultado = cur.fetchone()
-    
-    if not resultado or resultado[0] == 0:
-        conn.close()
-        raise HTTPException(status_code=404, detail="Resultado no encontrado")
-
     return {
         "id": simulacro_id,
-        "total_preguntas": resultado[0],
-        "aciertos": resultado[1] or 0,
-        "errores": resultado[2] or 0,
-        "sin_responder": resultado[3] or 0,
-        "puntaje_total": max(0, float(resultado[4])),
+        "total_preguntas": stats[0] or 0,
+        "aciertos": stats[1] or 0,
+        "errores": stats[2] or 0,
+        "sin_responder": stats[3] or 0,
+        "puntaje_total": max(0, float(resultado[0])),
     }
 
 
@@ -764,26 +773,23 @@ async def download_resultado_pdf(simulacro_id: int, token: str = None):
             SUM(CASE WHEN rd.es_correcta THEN 1 ELSE 0 END) as aciertos,
             SUM(CASE WHEN NOT rd.es_correcta AND rd.opcion_seleccionada_id IS NOT NULL THEN 1 ELSE 0 END) as errores,
             SUM(CASE WHEN rd.opcion_seleccionada_id IS NULL THEN 1 ELSE 0 END) as blancos,
-            SUM(rd.puntaje_obtenido) as puntaje
+            COALESCE(SUM(rs.puntaje_pregunta), 0) as puntaje
         FROM resultados_detalle rd
         JOIN preguntas p ON rd.pregunta_id = p.id
         LEFT JOIN asignaturas a ON p.asignatura_id = a.id
+        LEFT JOIN respuestas_simulacro rs ON rd.simulacro_id = rs.simulacro_id AND rd.pregunta_id = rs.pregunta_id
         WHERE rd.simulacro_id = %s
         GROUP BY a.id, a.nombre
         ORDER BY a.orden, a.nombre
     """, (simulacro_id,))
     resultados_asignatura = cur.fetchall()
     
-    # Obtener total general
+    # Obtener total general desde la tabla simulacros
     cur.execute("""
         SELECT 
-            COUNT(*) as total,
-            SUM(CASE WHEN es_correcta THEN 1 ELSE 0 END) as aciertos,
-            SUM(CASE WHEN NOT es_correcta AND opcion_seleccionada_id IS NOT NULL THEN 1 ELSE 0 END) as errores,
-            SUM(CASE WHEN opcion_seleccionada_id IS NULL THEN 1 ELSE 0 END) as blancos,
-            COALESCE(SUM(puntaje_obtenido), 0) as puntaje
-        FROM resultados_detalle
-        WHERE simulacro_id = %s
+            COALESCE(puntaje_total, 0) as puntaje
+        FROM simulacros
+        WHERE id = %s
     """, (simulacro_id,))
     total_row = cur.fetchone()
     
@@ -838,6 +844,11 @@ async def download_resultado_pdf(simulacro_id: int, token: str = None):
     data = [["Nº", "Asignatura", "Total", "Aciertos", "Errores", "Blancos", "Puntaje"]]
     
     total_puntaje = 0
+    total_total = 0
+    total_aciertos = 0
+    total_errores = 0
+    total_blancos = 0
+    
     for idx, row in enumerate(resultados_asignatura, 1):
         data.append([
             str(idx),
@@ -848,10 +859,15 @@ async def download_resultado_pdf(simulacro_id: int, token: str = None):
             str(row[4] or 0),
             f"{(row[5] or 0):.2f}"
         ])
+        total_total += (row[1] or 0)
+        total_aciertos += (row[2] or 0)
+        total_errores += (row[3] or 0)
+        total_blancos += (row[4] or 0)
         total_puntaje += (row[5] or 0)
     
     # Fila de total
-    data.append(["", "", str(total_row[0]), str(total_row[1]), str(total_row[2]), str(total_row[3]), f"{total_row[4]:.2f}"])
+    puntaje_final = total_row[0] if total_row else 0
+    data.append(["", "TOTAL", str(total_total), str(total_aciertos), str(total_errores), str(total_blancos), f"{puntaje_final:.2f}"])
     
     tabla = Table(data, colWidths=[0.4*inch, 2*inch, 0.7*inch, 0.7*inch, 0.7*inch, 0.7*inch, 1*inch])
     
@@ -872,7 +888,7 @@ async def download_resultado_pdf(simulacro_id: int, token: str = None):
     tabla.setStyle(estilo_tabla)
     elements.append(tabla)
     elements.append(Spacer(1, 20))
-    elements.append(Paragraph(f"<b>TOTAL PUNTAJE OBTENIDO: {total_row[4]:.2f}</b>", ParagraphStyle('Total', parent=styles['Normal'], fontSize=14, textColor=colors.HexColor("#1e40af"), alignment=2)))
+    elements.append(Paragraph(f"<b>TOTAL PUNTAJE OBTENIDO: {puntaje_final:.2f}</b>", ParagraphStyle('Total', parent=styles['Normal'], fontSize=14, textColor=colors.HexColor("#1e40af"), alignment=2)))
     
     doc.build(elements)
     
