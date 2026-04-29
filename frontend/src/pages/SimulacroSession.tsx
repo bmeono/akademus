@@ -200,26 +200,28 @@ export default function SimulacroSession() {
                   e.preventDefault();
                   e.stopPropagation();
                   
-                  // Priority: resultado.id > simulacroId > localStorage
-                  let finalId = null;
+                  // ID siempre debe estar disponible
+                  const savedId = localStorage.getItem('ultimo_simulacro_id');
+                  console.log('PDF: id param=', id, 'simulacroId=', simulacroId, 'savedId=', savedId, 'resultado=', resultado);
                   
-                  if (resultado && typeof resultado.id === 'number') {
-                    finalId = resultado.id;
-                  } else if (id) {
-                    finalId = Number(id);
-                  } else {
-                    finalId = localStorage.getItem('ultimo_simulacro_id');
+                  // Usar cualquier fuente de ID
+                  let finalId = simulacroId;
+                  if (!finalId || finalId === 0 || isNaN(finalId)) {
+                    finalId = resultado?.id;
+                  }
+                  if (!finalId || finalId === 0 || isNaN(finalId)) {
+                    finalId = savedId ? Number(savedId) : null;
                   }
                   
-                  console.log('Button clicked! finalId:', finalId, 'id:', id, 'resultado:', resultado);
+                  console.log('PDF: finalId=', finalId);
                   
-                  if (finalId) {
+                  if (finalId && finalId > 0) {
                     const token = localStorage.getItem('access_token');
                     const url = `https://akademus.onrender.com/simulacros/${finalId}/resultado-pdf?token=${token}`;
-                    console.log('Opening URL:', url);
+                    console.log('PDF URL:', url);
                     window.open(url, '_blank');
                   } else {
-                    alert('No se encontró el ID del simulacro. id=' + id + ', resultado=' + JSON.stringify(resultado));
+                    alert('Error: No se pudo obtener ID. SimulacroId=' + simulacroId + ', resultado.id=' + resultado?.id + ', saved=' + savedId);
                   }
                 }}
                 className="btn btn-secondary w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white p-3 rounded"
