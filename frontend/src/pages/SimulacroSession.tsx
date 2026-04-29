@@ -118,6 +118,9 @@ export default function SimulacroSession() {
         puntaje_total: data.puntaje_total,
       };
       
+      // Guardar ID en localStorage para PDF
+      localStorage.setItem('ultimo_simulacro_id', String(data.id));
+      
       console.log('resultadoData:', resultadoData);
       setResultado(resultadoData);
     } catch (e) {
@@ -196,18 +199,22 @@ export default function SimulacroSession() {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  console.log('DEBUG - resultado:', resultado, 'simulacroId:', simulacroId);
-                  // Usar resultado.id si está disponible, si no usar simulacroId
-                  const finalId = (resultado && resultado.id) ? resultado.id : simulacroId;
-                  console.log('Button clicked! finalId:', finalId, 'type:', typeof finalId);
-                  if (finalId && !isNaN(finalId)) {
+                  
+                  // Priority: resultado.id > simulacroId > localStorage
+                  let finalId = (resultado && resultado.id) ? resultado.id : simulacroId;
+                  if (!finalId || isNaN(finalId)) {
+                    finalId = localStorage.getItem('ultimo_simulacro_id');
+                  }
+                  
+                  console.log('Button clicked! finalId:', finalId, 'resultado:', resultado, 'simulacroId:', simulacroId);
+                  
+                  if (finalId) {
                     const token = localStorage.getItem('access_token');
-                    console.log('token:', token ? 'exists' : 'null');
                     const url = `https://akademus.onrender.com/simulacros/${finalId}/resultado-pdf?token=${token}`;
                     console.log('Opening URL:', url);
                     window.open(url, '_blank');
                   } else {
-                    alert('No se encontró el ID del simulacro. resultado=' + resultado + ' simulacroId=' + simulacroId);
+                    alert('No se encontró el ID del simulacro');
                   }
                 }}
                 className="btn btn-secondary w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white p-3 rounded"
