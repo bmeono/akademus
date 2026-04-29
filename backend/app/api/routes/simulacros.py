@@ -246,7 +246,7 @@ async def get_pregunta(
     # Obtiene pregunta
     cur.execute(
         """
-        SELECT p.id, p.tema_id, p.enunciado, p.explicacion, p.imagen_url, p.dificultad
+        SELECT p.id, p.tema_id, p.enunciado, p.explicacion, p.imagen_url, p.dificultad, p.universidad, p.an_exam
         FROM preguntas p
         JOIN respuestas_simulacro r ON r.pregunta_id = p.id
         WHERE r.simulacro_id = %s AND r.orden = %s
@@ -281,6 +281,8 @@ async def get_pregunta(
             explicacion=pregunta[3],
             imagen_url=pregunta[4],
             dificultad=pregunta[5],
+            universidad=pregunta[6] if len(pregunta) > 6 else None,
+            an_exam=pregunta[7] if len(pregunta) > 7 else None,
         ),
         opciones=opciones,
     )
@@ -320,8 +322,8 @@ async def get_todas_preguntas(
         tiempo_restante = duracion_segundos
 
     # Obtiene todas las preguntas
-    cur.execute("""
-        SELECT p.id, p.enunciado, p.explicacion, p.imagen_url, p.dificultad, r.orden, r.puntaje_pregunta
+cur.execute("""
+        SELECT p.id, p.enunciado, p.explicacion, p.imagen_url, p.dificultad, r.orden, r.puntaje_pregunta, p.universidad, p.an_exam
         FROM preguntas p
         JOIN respuestas_simulacro r ON r.pregunta_id = p.id
         WHERE r.simulacro_id = %s
@@ -359,6 +361,8 @@ async def get_todas_preguntas(
             "dificultad": p[4],
             "orden": p[5],
             "puntaje_pregunta": p[6],
+            "universidad": p[7] if len(p) > 7 else None,
+            "an_exam": p[8] if len(p) > 8 else None,
             "opciones": opciones_map.get(p[0], [])
         })
 
@@ -451,7 +455,7 @@ async def responder_pregunta(
     if siguiente_orden <= simulacro[1]:
         cur.execute(
             """
-            SELECT p.id, p.tema_id, p.enunciado, p.explicacion, p.imagen_url, p.dificultad
+            SELECT p.id, p.tema_id, p.enunciado, p.explicacion, p.imagen_url, p.dificultad, p.universidad, p.an_exam
             FROM preguntas p
             JOIN respuestas_simulacro r ON r.pregunta_id = p.id
             WHERE r.simulacro_id = %s AND r.orden = %s
@@ -469,7 +473,7 @@ async def responder_pregunta(
                 OpcionResponse(id=r[0], pregunta_id=r[1], texto=r[2])
                 for r in cur.fetchall()
             ]
-            siguiente = PreguntaCompletaResponse(
+siguiente = PreguntaCompletaResponse(
                 pregunta=PreguntaResponse(
                     id=sig_pregunta[0],
                     tema_id=sig_pregunta[1],
@@ -477,6 +481,8 @@ async def responder_pregunta(
                     explicacion=sig_pregunta[3],
                     imagen_url=sig_pregunta[4],
                     dificultad=sig_pregunta[5],
+                    universidad=sig_pregunta[6] if len(sig_pregunta) > 6 else None,
+                    an_exam=sig_pregunta[7] if len(sig_pregunta) > 7 else None,
                 ),
                 opciones=opciones,
             )

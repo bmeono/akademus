@@ -272,6 +272,14 @@ export default function SimulacroSession() {
 
         <div className="bg-white rounded-2xl shadow-lg p-8">
           <p className="text-lg text-slate-900 mb-6 whitespace-pre-wrap">{currentPregunta.enunciado}</p>
+          
+          {(currentPregunta.universidad || currentPregunta.an_exam) && (
+            <p className="text-sm text-slate-400 mb-6 italic">
+              {currentPregunta.universidad && <span>{currentPregunta.universidad}</span>}
+              {currentPregunta.universidad && currentPregunta.an_exam && <span> - </span>}
+              {currentPregunta.an_exam && <span>{currentPregunta.an_exam}</span>}
+            </p>
+          )}
 
           {currentPregunta.imagen_url && currentPregunta.imagen_url.length > 0 && (
             <div className="mb-6">

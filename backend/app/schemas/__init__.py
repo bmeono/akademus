@@ -88,6 +88,8 @@ class PreguntaResponse(BaseModel):
     explicacion: Optional[str]
     imagen_url: Optional[str]
     dificultad: int
+    universidad: Optional[str] = None
+    an_exam: Optional[str] = None
 
     class Config:
         from_attributes = True
