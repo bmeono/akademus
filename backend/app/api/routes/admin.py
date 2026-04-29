@@ -574,16 +574,19 @@ async def update_usuario_permiso(data: PermisoUpdate, current_user: dict = Depen
     conn = get_db_connection()
     cur = conn.cursor()
     
+    # Convertir a integer
+    usuario_id = int(data.usuario_id)
+    
     cur.execute("""
         INSERT INTO usuario_permisos (usuario_id, seccion, tiene_acceso)
         VALUES (%s, %s, %s)
         ON CONFLICT (usuario_id, seccion)
         DO UPDATE SET tiene_acceso = %s
-    """, (data.usuario_id, data.seccion, data.tiene_acceso, data.tiene_acceso))
+    """, (usuario_id, data.seccion, data.tiene_acceso, data.tiene_acceso))
     
     conn.commit()
     conn.close()
-    return {"usuario_id": data.usuario_id, "seccion": data.seccion, "tiene_acceso": data.tiene_acceso}
+    return {"usuario_id": str(usuario_id), "seccion": data.seccion, "tiene_acceso": data.tiene_acceso}
 
 
 @router.get("/mis-permisos")
