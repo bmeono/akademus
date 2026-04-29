@@ -765,24 +765,75 @@ async def download_resultado_pdf(simulacro_id: int, token: str = None):
     
     especialidad = sim_row[1] or "General"
     
-    # Obtener resultados por asignatura
+    # Obtener el grupo académico de la especialidad
+    cur.execute("""
+        SELECT grupo_academico_id FROM especialidades WHERE id = %s
+    """, (sim_row[0],))
+    grupo_row = cur.fetchone()
+    grupo_id = grupo_row[0] if grupo_row else None
+    
+    # Obtener TODAS las configuraciones de puntaje del grupo (para mostrar todas las asignaturas)
+    cur.execute("""
+        SELECT a.id, a.nombre, a.orden, cp.numero_preguntas, cp.puntaje_pregunta
+        FROM configuraciones_puntaje cp
+        JOIN asignaturas a ON cp.asignatura_id = a.id
+        WHERE cp.grupo_academico_id = %s AND cp.activo = TRUE
+        ORDER BY a.orden, a.nombre
+    """, (grupo_id,))
+    configs = cur.fetchall()
+    
+    # Obtener resultados del detalle (para calcular aciertos/errores/blancos)
     cur.execute("""
         SELECT 
-            a.nombre as asignatura,
-            COUNT(*) as total,
+            p.asignatura_id,
+            COUNT(*) as total_respuestas,
             SUM(CASE WHEN rd.es_correcta THEN 1 ELSE 0 END) as aciertos,
             SUM(CASE WHEN NOT rd.es_correcta AND rd.opcion_seleccionada_id IS NOT NULL THEN 1 ELSE 0 END) as errores,
-            SUM(CASE WHEN rd.opcion_seleccionada_id IS NULL THEN 1 ELSE 0 END) as blancos,
-            COALESCE(SUM(rs.puntaje_pregunta), 0) as puntaje
+            SUM(CASE WHEN rd.opcion_seleccionada_id IS NULL THEN 1 ELSE 0 END) as blancos
         FROM resultados_detalle rd
         JOIN preguntas p ON rd.pregunta_id = p.id
-        LEFT JOIN asignaturas a ON p.asignatura_id = a.id
-        LEFT JOIN respuestas_simulacro rs ON rd.simulacro_id = rs.simulacro_id AND rd.pregunta_id = rs.pregunta_id
         WHERE rd.simulacro_id = %s
-        GROUP BY a.id, a.nombre
-        ORDER BY a.orden, a.nombre
+        GROUP BY p.asignatura_id
     """, (simulacro_id,))
-    resultados_asignatura = cur.fetchall()
+    resultados_raw = cur.fetchall()
+    
+    # Mapear resultados por asignatura_id
+    resultados_map = {}
+    for r in resultados_raw:
+        resultados_map[r[0]] = {
+            'aciertos': r[2] or 0,
+            'errores': r[3] or 0,
+            'blancos': r[4] or 0
+        }
+    
+    # Construir lista de resultados por asignatura
+    resultados_asignatura = []
+    for cfg in configs:
+        asignat_id = cfg[0]
+        nombre = cfg[1]
+        orden = cfg[2]
+        num_preguntas = cfg[3]
+        puntaje_pregunta = float(cfg[4]) if cfg[4] else 1.0
+        
+        res = resultados_map.get(asignat_id, {'aciertos': 0, 'errores': 0, 'blancos': 0})
+        aciertos = res['aciertos']
+        errores = res['errores']
+        blancos = res['blancos']
+        
+        # Calcular puntaje: acierto * puntaje_pregunta - errores * 1.125 (penalidad)
+        # O usar la suma de puntajes guardados
+        puntaje = (aciertos * puntaje_pregunta) - (errores * 1.125)
+        if puntaje < 0:
+            puntaje = 0
+            
+        resultados_asignatura.append({
+            'asignatura': nombre,
+            'total': num_preguntas,
+            'aciertos': aciertos,
+            'errores': errores,
+            'blancos': blancos,
+            'puntaje': round(puntaje, 2)
+        })
     
     # Obtener total general desde la tabla simulacros
     cur.execute("""
@@ -852,22 +903,21 @@ async def download_resultado_pdf(simulacro_id: int, token: str = None):
     for idx, row in enumerate(resultados_asignatura, 1):
         data.append([
             str(idx),
-            row[0] or "Sin asignar",
-            str(row[1]),
-            str(row[2] or 0),
-            str(row[3] or 0),
-            str(row[4] or 0),
-            f"{(row[5] or 0):.2f}"
+            row['asignatura'],
+            str(row['total']),
+            str(row['aciertos']),
+            str(row['errores']),
+            str(row['blancos']),
+            f"{row['puntaje']:.2f}"
         ])
-        total_total += (row[1] or 0)
-        total_aciertos += (row[2] or 0)
-        total_errores += (row[3] or 0)
-        total_blancos += (row[4] or 0)
-        total_puntaje += (row[5] or 0)
+        total_total += row['total']
+        total_aciertos += row['aciertos']
+        total_errores += row['errores']
+        total_blancos += row['blancos']
+        total_puntaje += row['puntaje']
     
     # Fila de total
-    puntaje_final = total_row[0] if total_row else 0
-    data.append(["", "TOTAL", str(total_total), str(total_aciertos), str(total_errores), str(total_blancos), f"{puntaje_final:.2f}"])
+    data.append(["", "TOTAL", str(total_total), str(total_aciertos), str(total_errores), str(total_blancos), f"{round(total_puntaje, 2):.2f}"])
     
     tabla = Table(data, colWidths=[0.4*inch, 2*inch, 0.7*inch, 0.7*inch, 0.7*inch, 0.7*inch, 1*inch])
     
