@@ -201,12 +201,17 @@ export default function SimulacroSession() {
                   e.stopPropagation();
                   
                   // Priority: resultado.id > simulacroId > localStorage
-                  let finalId = (resultado && resultado.id) ? resultado.id : simulacroId;
-                  if (!finalId || isNaN(finalId)) {
+                  let finalId = null;
+                  
+                  if (resultado && typeof resultado.id === 'number') {
+                    finalId = resultado.id;
+                  } else if (id) {
+                    finalId = Number(id);
+                  } else {
                     finalId = localStorage.getItem('ultimo_simulacro_id');
                   }
                   
-                  console.log('Button clicked! finalId:', finalId, 'resultado:', resultado, 'simulacroId:', simulacroId);
+                  console.log('Button clicked! finalId:', finalId, 'id:', id, 'resultado:', resultado);
                   
                   if (finalId) {
                     const token = localStorage.getItem('access_token');
@@ -214,7 +219,7 @@ export default function SimulacroSession() {
                     console.log('Opening URL:', url);
                     window.open(url, '_blank');
                   } else {
-                    alert('No se encontró el ID del simulacro');
+                    alert('No se encontró el ID del simulacro. id=' + id + ', resultado=' + JSON.stringify(resultado));
                   }
                 }}
                 className="btn btn-secondary w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white p-3 rounded"
