@@ -881,7 +881,7 @@ async def download_resultado_pdf(simulacro_id: int, token: str = None):
         ('BACKGROUND', (0, 1), (-1, -2), colors.white),
         ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor("#e0f2fe")),
         ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-        ('GRID', (0, 0), (-1, -1), 1, colors.slate),
+        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor("#94a3b8")),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
     ])
     
