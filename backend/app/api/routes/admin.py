@@ -597,17 +597,26 @@ async def update_usuario_permiso(data: PermisoUpdate, current_user: dict = Depen
 async def get_mis_permisos(credentials = Depends(http_bearer)):
     """Obtiene los permisos del usuario actual."""
     from app.core.security import decode_token
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info(f"credentials: {credentials}")
     
     if not credentials:
         return {"dashboard": False, "simulacros": False, "temas_debiles": False, "flashcards": False, "admin": False}
     
     token = credentials.credentials
+    logger.info(f"token: {token[:20]}...")
+    
     try:
         payload = decode_token(token)
-    except:
+    except Exception as e:
+        logger.info(f"decode_token error: {e}")
         return {"dashboard": False, "simulacros": False, "temas_debiles": False, "flashcards": False, "admin": False}
     
     user_id = payload.get("sub")
+    logger.info(f"user_id: {user_id}")
+    
     if not user_id:
         return {"dashboard": False, "simulacros": False, "temas_debiles": False, "flashcards": False, "admin": False}
     
