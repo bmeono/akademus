@@ -634,6 +634,16 @@ async def get_mis_permisos(credentials = Depends(http_bearer)):
             # Default para usuarios sin permisos definidos
             return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True, "feynman": True, "admin": False}
         
-        return permisos
+        # Normalizar permisos - asegurar que todas las claves existan
+        normalized = {
+            "dashboard": permisos.get("dashboard", False),
+            "simulacros": permisos.get("simulacros", False),
+            "temas_debiles": permisos.get("temas_debiles", False),
+            "flashcards": permisos.get("flashcards", False),
+            "feynman": permisos.get("feynman", False),
+            "admin": permisos.get("admin", False),
+        }
+        
+        return normalized
     except:
         return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True, "feynman": True, "admin": False}
