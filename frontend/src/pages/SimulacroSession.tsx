@@ -195,8 +195,13 @@ export default function SimulacroSession() {
                 onClick={() => {
                   const urlParams = new URLSearchParams(window.location.search);
                   const simulacroId = urlParams.get('simulacro_id');
+                  console.log('simulacroId:', simulacroId);
                   if (simulacroId) {
-                    simulacrosAPI.downloadResultadoPDF(parseInt(simulacroId));
+                    const token = localStorage.getItem('access_token');
+                    console.log('token:', token ? 'exists' : 'null');
+                    window.open(`https://akademus.onrender.com/simulacros/${simulacroId}/resultado-pdf?token=${token}`, '_blank');
+                  } else {
+                    alert('No se encontró el ID del simulacro');
                   }
                 }}
                 className="btn btn-secondary w-full flex items-center justify-center gap-2"
