@@ -1211,6 +1211,7 @@ export default function AdminPage() {
             })}
           </div>
         );
+      }
       default:
         return null;
     }
