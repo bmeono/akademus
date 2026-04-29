@@ -941,7 +941,7 @@ export default function AdminPage() {
             </tbody>
           </table>
         );
-      case 'preguntas':
+      case 'preguntas': {
         const preguntasFiltradas = preguntas.filter(p => {
           const matchAsig = filtroAsignatura === 'todas' || p.asignatura_nombre?.includes(filtroAsignatura);
           const matchBusq = busqueda === '' || p.enunciado.toLowerCase().includes(busqueda.toLowerCase());
@@ -1058,7 +1058,7 @@ export default function AdminPage() {
             )}
           </div>
         );
-      case 'novedades':
+      case 'novedades': {
         const preguntasPendientes = preguntas.filter(p => p.estado === 'pendiente');
         const preguntasAprobadas = preguntas.filter(p => p.estado === 'aprobado');
         const preguntasRechazadas = preguntas.filter(p => p.estado === 'rechazado');
@@ -1123,8 +1123,9 @@ export default function AdminPage() {
               </div>
             )}
           </div>
-);
-      case 'permisos':
+        );
+      }
+      case 'permisos': {
         const getPermisoEditando = (usuarioId: string, seccion: string, valorOriginal: boolean) => {
           if (permisosEditando[usuarioId]?.[seccion] !== undefined) {
             return permisosEditando[usuarioId][seccion];
