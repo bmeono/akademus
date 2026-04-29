@@ -115,7 +115,7 @@ ON CONFLICT (usuario_id, pregunta_id) DO NOTHING
         """, (user_id, user_id, asignatura_id))
         conn.commit()
         
-        # Get questions NOT answered correctly - optimized with JOINs instead of subqueries
+        # Get questions NOT answered correctly - with random option order
         cur.execute("""
             SELECT DISTINCT ON (p.id)
                 p.id as pregunta_id,
@@ -123,7 +123,11 @@ ON CONFLICT (usuario_id, pregunta_id) DO NOTHING
                 p.imagen_url,
                 p.explicacion,
                 oc.texto as opcion_correcta,
-                oi.texto as opcion_incorrecta,
+                (
+                    SELECT o.texto FROM opciones o 
+                    WHERE o.pregunta_id = p.id AND o.es_correcta = FALSE 
+                    ORDER BY RANDOM() LIMIT 1
+                ) as opcion_incorrecta,
                 f.id as flashcard_id,
                 f.respondida,
                 f.respondida_correcta
@@ -131,25 +135,30 @@ ON CONFLICT (usuario_id, pregunta_id) DO NOTHING
             JOIN simulacros s ON s.id = rd.simulacro_id
             JOIN preguntas p ON p.id = rd.pregunta_id
             LEFT JOIN opciones oc ON oc.pregunta_id = p.id AND oc.es_correcta = TRUE
-            LEFT JOIN opciones oi ON oi.pregunta_id = p.id AND oi.es_correcta = FALSE AND oi.id != oc.id
             LEFT JOIN flashcards f ON f.usuario_id = %s AND f.pregunta_id = p.id
             WHERE s.usuario_id = %s 
               AND p.asignatura_id = %s 
               AND rd.es_correcta = FALSE
               AND (f.respondida IS NULL OR f.respondida_correcta = FALSE)
-            ORDER BY p.id
+            ORDER BY p.id, RANDOM()
         """, (user_id, user_id, asignatura_id))
         
         rows = cur.fetchall()
         preguntas = []
         for r in rows:
+            # Randomly decide which option is first (0 = correct first, 1 = incorrect first)
+            import random
+            correcto_primero = random.choice([True, False])
+            
             preguntas.append({
                 "pregunta_id": r[0],
                 "enunciado": r[1],
                 "imagen_url": r[2],
                 "explicacion": r[3],
-                "opcion_correcta": r[4],
-                "opcion_incorrecta": r[5],
+                # Orden aleatorio basado en correcto_primero
+                "opcion_a": r[4] if correcto_primero else r[5],
+                "opcion_b": r[5] if correcto_primero else r[4],
+                "respuesta_correcta_es_a": correcto_primero,
                 "flashcard_id": r[6],
                 "respondida": r[7],
                 "respondida_correcta": r[8],

@@ -15,8 +15,9 @@ interface Asignatura {
 interface Pregunta {
   pregunta_id: number;
   enunciado: string;
-  opcion_correcta: string;
-  opcion_incorrecta: string;
+  opcion_a: string;
+  opcion_b: string;
+  respuesta_correcta_es_a: boolean;
   imagen_url?: string;
   flashcard_id?: number;
   respondida?: boolean;
@@ -91,9 +92,9 @@ export default function FlashcardsPage() {
   const pregunta = preguntas[preguntaActual];
   const preguntaActualData = pregunta;
   
-  const handleRespuesta = async (opcion: string, esCorrecta: boolean) => {
+  const handleRespuesta = async (esOpcionA: boolean, esCorrecta: boolean) => {
     if (respondido.correcto !== null) return;
-    setRespondido({correcto: esCorrecta, respuesta: opcion});
+    setRespondido({correcto: esCorrecta, respuesta: esOpcionA ? 'a' : 'b'});
     
     try {
       await flashcardsAPI.responder(pregunta?.pregunta_id, esCorrecta);
@@ -151,39 +152,39 @@ export default function FlashcardsPage() {
           {/* Opciones */}
           <div className="p-6 space-y-4 bg-slate-50">
             <button
-              onClick={() => handleRespuesta(pregunta.opcion_correcta, true)}
+              onClick={() => handleRespuesta(true, pregunta.respuesta_correcta_es_a)}
               disabled={respondido.correcto !== null}
               className={`w-full p-5 text-left rounded-xl border-2 transition-all duration-200 ${
                 respondido.correcto === null 
-                  ? 'border-white hover:border-primary-400 hover:bg-white hover:shadow-md bg-white'
-                  : pregunta.opcion_correcta === respondido.respuesta
+                  ? 'border-slate-200 hover:border-primary-400 hover:bg-white hover:shadow-md bg-white'
+                  : pregunta.respuesta_correcta_es_a
                     ? 'bg-green-50 border-green-500 shadow-md'
                     : 'bg-slate-100 border-slate-200 opacity-50'
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="font-medium text-slate-800">{pregunta.opcion_correcta}</span>
-                {respondido.correcto !== null && pregunta.opcion_correcta === respondido.respuesta && (
+                <span className="font-medium text-slate-800">{pregunta.opcion_a}</span>
+                {respondido.correcto !== null && pregunta.respuesta_correcta_es_a && (
                   <CheckCircle className="w-6 h-6 text-green-600" />
                 )}
               </div>
             </button>
 
             <button
-              onClick={() => handleRespuesta(pregunta.opcion_incorrecta, false)}
+              onClick={() => handleRespuesta(false, !pregunta.respuesta_correcta_es_a)}
               disabled={respondido.correcto !== null}
               className={`w-full p-5 text-left rounded-xl border-2 transition-all duration-200 ${
                 respondido.correcto === null 
-                  ? 'border-white hover:border-error-400 hover:bg-white hover:shadow-md bg-white'
-                  : pregunta.opcion_incorrecta === respondido.respuesta
-                    ? 'bg-red-50 border-red-500 shadow-md'
+                  ? 'border-slate-200 hover:border-primary-400 hover:bg-white hover:shadow-md bg-white'
+                  : !pregunta.respuesta_correcta_es_a
+                    ? 'bg-green-50 border-green-500 shadow-md'
                     : 'bg-slate-100 border-slate-200 opacity-50'
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="font-medium text-slate-800">{pregunta.opcion_incorrecta}</span>
-                {respondido.correcto !== null && pregunta.opcion_incorrecta === respondido.respuesta && (
-                  <XCircle className="w-6 h-6 text-red-600" />
+                <span className="font-medium text-slate-800">{pregunta.opcion_b}</span>
+                {respondido.correcto !== null && !pregunta.respuesta_correcta_es_a && (
+                  <CheckCircle className="w-6 h-6 text-green-600" />
                 )}
               </div>
             </button>
