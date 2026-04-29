@@ -196,18 +196,15 @@ export default function SimulacroSession() {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  console.log('Button clicked! simulacroId:', simulacroId);
-                  try {
-                    if (simulacroId) {
-                      const token = localStorage.getItem('access_token');
-                      console.log('token:', token ? 'exists' : 'null');
-                      window.open(`https://akademus.onrender.com/simulacros/${simulacroId}/resultado-pdf?token=${token}`, '_blank');
-                    } else {
-                      alert('No se encontró el ID del simulacro');
-                    }
-                  } catch (err) {
-                    console.error('Error:', err);
-                    alert('Error al descargar: ' + err);
+                  // Usar resultado.id si está disponible, si no usar simulacroId
+                  const finalId = (resultado && resultado.id) || simulacroId;
+                  console.log('Button clicked! finalId:', finalId);
+                  if (finalId) {
+                    const token = localStorage.getItem('access_token');
+                    console.log('token:', token ? 'exists' : 'null');
+                    window.open(`https://akademus.onrender.com/simulacros/${finalId}/resultado-pdf?token=${token}`, '_blank');
+                  } else {
+                    alert('No se encontró el ID del simulacro');
                   }
                 }}
                 className="btn btn-secondary w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white p-3 rounded"
