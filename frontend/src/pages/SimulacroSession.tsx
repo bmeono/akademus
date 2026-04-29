@@ -200,37 +200,53 @@ export default function SimulacroSession() {
                   e.preventDefault();
                   e.stopPropagation();
                   
-                  // ID siempre debe estar disponible
-                  const savedId = localStorage.getItem('ultimo_simulacro_id');
-                  console.log('PDF: id param=', id, 'simulacroId=', simulacroId, 'savedId=', savedId, 'resultado=', resultado);
-                  
-                  // Usar cualquier fuente de ID
-                  let finalId = simulacroId;
-                  if (!finalId || finalId === 0 || isNaN(finalId)) {
-                    finalId = resultado?.id;
+                  // Intentar obtener ID desde cualquier fuente
+                  let pid = simulacroId;
+                  if (!pid || pid === 0 || isNaN(pid)) {
+                    pid = resultado?.id;
                   }
-                  if (!finalId || finalId === 0 || isNaN(finalId)) {
-                    finalId = savedId ? Number(savedId) : null;
+                  if (!pid || pid === 0 || isNaN(pid)) {
+                    const saved = localStorage.getItem('ultimo_simulacro_id');
+                    pid = saved ? Number(saved) : null;
                   }
                   
-                  console.log('PDF: finalId=', finalId);
+                  console.log('PDF click: pid=', pid);
                   
-                  if (finalId && finalId > 0) {
+                  // Si tenemos ID, intentar descargar directamente
+                  if (pid && pid > 0) {
                     const token = localStorage.getItem('access_token');
-                    const url = `https://akademus.onrender.com/simulacros/${finalId}/resultado-pdf?token=${token}`;
-                    console.log('PDF URL:', url);
+                    const url = `https://akademus.onrender.com/simulacros/${pid}/resultado-pdf?token=${token}`;
                     window.open(url, '_blank');
+                    return;
+                  }
+                  
+                  // Si no hay ID, intentar /resultado endpoint para obtener datos
+                  const savedId = localStorage.getItem('ultimo_simulacro_id');
+                  if (savedId) {
+                    const token = localStorage.getItem('access_token');
+                    fetch(`https://akademus.onrender.com/simulacros/${savedId}/resultado`, {
+                      headers: { 'Authorization': 'Bearer ' + token }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                      console.log('Resultado API:', data);
+                      if (data.id) {
+                        const url = `https://akademus.onrender.com/simulacros/${data.id}/resultado-pdf?token=${token}`;
+                        window.open(url, '_blank');
+                      } else {
+                        alert('No se pudo obtener resultado');
+                      }
+                    })
+                    .catch(err => {
+                      console.error(err);
+                      alert('Error: ' + err.message);
+                    });
                   } else {
-                    alert('Error: No se pudo obtener ID. SimulacroId=' + simulacroId + ', resultado.id=' + resultado?.id + ', saved=' + savedId);
+                    alert('No hay ID de simulacro. Ejecuta un simulacro primero.');
                   }
                 }}
                 className="btn btn-secondary w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white p-3 rounded"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Descargar Resultados PDF
-              </button>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
