@@ -43,37 +43,6 @@ def create_flashcards_tables():
 
     conn.commit()
     conn.close()
-        CREATE TABLE flashcards (
-            id SERIAL PRIMARY KEY,
-            usuario_id UUID NOT NULL,
-            pregunta_id INTEGER NOT NULL,
-            estado VARCHAR(20) DEFAULT 'activa',
-            respondida BOOLEAN DEFAULT FALSE,
-            respondida_correcta BOOLEAN DEFAULT FALSE,
-            facilidad INTEGER DEFAULT 2500,
-            intervalo INTEGER DEFAULT 1,
-            repeticiones INTEGER DEFAULT 0,
-            proxima_revision DATE DEFAULT CURRENT_DATE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(usuario_id, pregunta_id)
-        )
-    """)
-    
-    # Tabla historial
-    cur.execute("""
-        CREATE TABLE flashcard_historial (
-            id SERIAL PRIMARY KEY,
-            flashcard_id INTEGER NOT NULL,
-            usuario_id UUID NOT NULL,
-            calidad_respuesta INTEGER,
-            tiempo_respuesta INTEGER DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    
-    conn.commit()
-    conn.close()
 
 
 @router.get("/init")
