@@ -105,26 +105,29 @@ async def hacer_consulta(
 async def get_historial(current_user: dict = Depends(get_current_user)):
     """Obtiene el historial del usuario."""
     user_id = current_user["id"]
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("""
-        SELECT id, materia, pregunta, respuesta, fecha_consulta
-        FROM comunidad_consultas
-        WHERE usuario_id = %s
-        ORDER BY fecha_consulta DESC
-        LIMIT 50
-    """, (str(user_id),))
-    rows = cur.fetchall()
-    conn.close()
-    return {
-        "historial": [{
-            "id": r[0],
-            "materia": r[1],
-            "pregunta": r[2],
-            "respuesta": r[3],
-            "fecha": r[4]
-        } for r in rows]
-    }
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT id, materia, pregunta, respuesta, fecha_consulta
+            FROM comunidad_consultas
+            WHERE usuario_id = %s
+            ORDER BY fecha_consulta DESC
+            LIMIT 50
+        """, (str(user_id),))
+        rows = cur.fetchall()
+        conn.close()
+        return {
+            "historial": [{
+                "id": r[0],
+                "materia": r[1],
+                "pregunta": r[2],
+                "respuesta": r[3],
+                "fecha": r[4]
+            } for r in rows]
+        }
+    except Exception as e:
+        return {"historial": [], "error": str(e)}
 
 
 @router.get("/creditos")
