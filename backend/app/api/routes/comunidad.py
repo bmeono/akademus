@@ -1,5 +1,6 @@
 import os
 import json
+import traceback
 import urllib.request
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -8,7 +9,6 @@ from app.core.db import get_db_connection
 
 router = APIRouter(prefix="/comunidad", tags=["comunidad"])
 
-# NUNCA hardcodees la API key. Léesela de las variables de entorno de Render.
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") 
 SYSTEM_PROMPT = "Eres el Tutor Virtual de AKADEMUS. Resuelve dudas academicas de manera pedagogica."
 
@@ -20,17 +20,11 @@ async def llamar_gemini(pregunta: str) -> str:
     if not GEMINI_API_KEY:
         raise HTTPException(status_code=500, detail="API Key de Gemini no configurada en el servidor.")
 
-    # Usando gemini-1.5-flash como acordamos para mayor estabilidad
     url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     
     payload = {
-        "contents": [{
-            "parts": [{"text": f"{SYSTEM_PROMPT}\n\nPregunta:\n{pregunta}"}]
-        }], 
-        "generationConfig": {
-            "temperature": 0.7, 
-            "maxOutputTokens": 2048
-        }
+        "contents": [{"parts": [{"text": f"{SYSTEM_PROMPT}\n\nPregunta:\n{pregunta}"}]}], 
+        "generationConfig": {"temperature": 0.7, "maxOutputTokens": 2048}
     }
     
     data = json.dumps(payload).encode("utf-8")
@@ -54,43 +48,45 @@ async def get_asignaturas(current_user: dict = Depends(get_current_user)):
 
 @router.post("/consultar")
 async def hacer_consulta(req: ConsultaRequest, current_user: dict = Depends(get_current_user)):
-    user_id = current_user["id"]
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    # Verificar créditos disponibles
-    cur.execute("SELECT consultas_ia_Disponibles FROM usuarios WHERE id = %s", (str(user_id),))
-    row = cur.fetchone()
-    
-    if not row:
-        conn.close()
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-        
-    creditos = row[0] if row[0] else 0
-    if creditos <= 0:
-        conn.close()
-        raise HTTPException(status_code=403, detail="Sin creditos disponibles")
-        
     try:
-        # Llamar a la API
-        respuesta = await llamar_gemini(req.pregunta)
-    except Exception as e:
-        conn.close()
-        raise HTTPException(status_code=500, detail=str(e))
+        user_id = current_user["id"]
+        conn = get_db_connection()
+        cur = conn.cursor()
         
-    # Guardar en historial y descontar crédito
-    cur.execute(
-        "INSERT INTO comunidad_consultas (usuario_id, materia, pregunta, respuesta) VALUES (%s, %s, %s, %s)", 
-        (user_id, req.materia, req.pregunta, respuesta)
-    )
-    cur.execute(
-        "UPDATE usuarios SET consultas_ia_Disponibles = consultas_ia_Disponibles - 1 WHERE id = %s", 
-        (str(user_id),)
-    )
-    
-    conn.commit()
-    conn.close()
-    return {"respuesta": respuesta}
+        # ojo: PostgreSQL convierte todo a minúsculas
+        cur.execute("SELECT consultas_ia_disponibles FROM usuarios WHERE id = %s", (str(user_id),))
+        row = cur.fetchone()
+        print(f"DEBUG creditos row: {row}", flush=True)
+        
+        if not row:
+            conn.close()
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+            
+        creditos = row[0] if row[0] else 0
+        if creditos <= 0:
+            conn.close()
+            raise HTTPException(status_code=403, detail="Sin creditos disponibles")
+            
+        respuesta = await llamar_gemini(req.pregunta)
+        print(f"DEBUG Gemini respondió OK", flush=True)
+        
+        cur.execute(
+            "INSERT INTO comunidad_consultas (usuario_id, materia, pregunta, respuesta) VALUES (%s, %s, %s, %s)", 
+            (user_id, req.materia, req.pregunta, respuesta)
+        )
+        cur.execute(
+            "UPDATE usuarios SET consultas_ia_disponibles = consultas_ia_disponibles - 1 WHERE id = %s", 
+            (str(user_id),)
+        )
+        conn.commit()
+        conn.close()
+        return {"respuesta": respuesta}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/historial")
 async def get_historial(current_user: dict = Depends(get_current_user)):
@@ -106,14 +102,19 @@ async def get_historial(current_user: dict = Depends(get_current_user)):
         conn.close()
         return {"historial": [{"id": r[0], "materia": r[1], "pregunta": r[2], "respuesta": r[3], "fecha": r[4]} for r in rows]}
     except Exception as e:
+        traceback.print_exc()
         return {"historial": [], "error": str(e)}
 
 @router.get("/creditos")
 async def get_creditos(current_user: dict = Depends(get_current_user)):
     user_id = current_user["id"]
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT consultas_ia_Disponibles FROM usuarios WHERE id = %s", (str(user_id),))
-    row = cur.fetchone()
-    conn.close()
-    return {"creditos": row[0] if row and row[0] else 0}
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT consultas_ia_disponibles FROM usuarios WHERE id = %s", (str(user_id),))
+        row = cur.fetchone()
+        conn.close()
+        return {"creditos": row[0] if row and row[0] else 0}
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
