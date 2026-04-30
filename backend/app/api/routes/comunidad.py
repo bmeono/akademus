@@ -52,7 +52,7 @@ async def get_asignaturas(current_user: dict = Depends(get_current_user)):
     """Obtiene las asignaturas disponibles."""
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT id, nombre FROM asignaturas WHERE activa = TRUE ORDER BY orden, nombre")
+    cur.execute("SELECT id, nombre FROM asignaturas  ORDER BY orden, nombre")
     rows = cur.fetchall()
     conn.close()
     return {"asignaturas": [{"id": r[0], "nombre": r[1]} for r in rows]}
