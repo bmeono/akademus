@@ -11,48 +11,44 @@ export default function DashboardLayout() {
   const navigate = useNavigate();
   
 useEffect(() => {
-    const init = async () => {
-      const tryFetch = async (attempt: number): Promise<boolean> => {
-        try {
-          const { data } = await usersAPI.me();
-          setUser(data);
-          setAuthenticated(true);
-          
-          try {
-            const perms = await adminAPI.getMisPermisos();
-            setPermisos(perms.data);
-          } catch {
-            // Default to NO permissions if fails
-            setPermisos({});
-          }
-          return true;
-        } catch {
-          if (attempt < 2) {
-            await new Promise(r => setTimeout(r, 2000));
-            return tryFetch(attempt + 1);
-          }
-          return false;
-        }
-      };
-      
-      const success = await tryFetch(0);
-      if (!success) {
-        logout();
-        navigate('/login');
-      }
+  const init = async () => {
+    // Si ya tenemos user y permisos en el store, no volver a buscar
+    if (user && permisos) {
       setLoading(false);
-    };
-    init();
-  }, []);
+      return;
+    }
 
-  const handleLogout = async () => {
-    try {
-      await authService.logout();
-    } catch {}
-    localStorage.clear();
-    logout();
-    navigate('/login');
+    const tryFetch = async (attempt: number): Promise<boolean> => {
+      try {
+        const { data } = await usersAPI.me();
+        setUser(data);
+        setAuthenticated(true);
+        
+        try {
+          const perms = await adminAPI.getMisPermisos();
+          setPermisos(perms.data);
+        } catch {
+          setPermisos({});
+        }
+        return true;
+      } catch {
+        if (attempt < 2) {
+          await new Promise(r => setTimeout(r, 2000));
+          return tryFetch(attempt + 1);
+        }
+        return false;
+      }
+    };
+
+    const success = await tryFetch(0);
+    if (!success) {
+      logout();
+      navigate('/login');
+    }
+    setLoading(false);
   };
+  init();
+}, []);
 
 //  const menuItems = [
 //    permisos?.dashboard === true && { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
