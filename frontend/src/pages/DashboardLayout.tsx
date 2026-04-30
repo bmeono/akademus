@@ -54,13 +54,21 @@ useEffect(() => {
     navigate('/login');
   };
 
+//  const menuItems = [
+//    permisos?.dashboard === true && { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
+//    permisos?.simulacros === true && { icon: BookOpen, label: 'Simulacros', href: '/simulacros' },
+//    permisos?.temas_debiles === true && { icon: AlertTriangle, label: 'Temas Débiles', href: '/temas-debiles' },
+//    permisos?.flashcards === true && { icon: Brain, label: 'Flashcards', href: '/flashcards' },
+//    permisos?.comunidad === true && { icon: MessageCircle, label: 'Comunidad AKADEMUS', href: '/comunidad' },
+//  ].filter(Boolean);
+
   const menuItems = [
-    permisos?.dashboard === true && { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
-    permisos?.simulacros === true && { icon: BookOpen, label: 'Simulacros', href: '/simulacros' },
-    permisos?.temas_debiles === true && { icon: AlertTriangle, label: 'Temas Débiles', href: '/temas-debiles' },
-    permisos?.flashcards === true && { icon: Brain, label: 'Flashcards', href: '/flashcards' },
-    permisos?.comunidad === true && { icon: MessageCircle, label: 'Comunidad AKADEMUS', href: '/comunidad' },
-  ].filter(Boolean);
+  permisos?.dashboard && { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
+  permisos?.simulacros && { icon: BookOpen, label: 'Simulacros', href: '/simulacros' },
+  permisos?.temas_debiles && { icon: AlertTriangle, label: 'Temas Débiles', href: '/temas-debiles' },
+  permisos?.flashcards && { icon: Brain, label: 'Flashcards', href: '/flashcards' },
+  permisos?.comunidad && { icon: MessageCircle, label: 'Comunidad AKADEMUS', href: '/comunidad' },
+].filter(Boolean);
 
   // rol_id 1 = administrador, rol_id 2 = usuario común
   const isAdmin = user?.rol_id === 1;
