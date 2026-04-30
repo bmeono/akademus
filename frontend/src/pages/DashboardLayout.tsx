@@ -59,7 +59,7 @@ useEffect(() => {
     permisos?.simulacros === true && { icon: BookOpen, label: 'Simulacros', href: '/simulacros' },
     permisos?.temas_debiles === true && { icon: AlertTriangle, label: 'Temas Débiles', href: '/temas-debiles' },
     permisos?.flashcards === true && { icon: Brain, label: 'Flashcards', href: '/flashcards' },
-    permisos?.comunidad === true && { icon: MessageCircle, label: 'Comunidad IA', href: '/comunidad' },
+    permisos?.comunidad === true && { icon: MessageCircle, label: 'Comunidad AKADEMUS', href: '/comunidad' },
   ].filter(Boolean);
 
   // rol_id 1 = administrador, rol_id 2 = usuario común
