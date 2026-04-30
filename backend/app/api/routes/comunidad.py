@@ -5,7 +5,7 @@ from app.core.db import get_db_connection
 
 router = APIRouter(prefix="/comunidad", tags=["comunidad"])
 
-GEMINI_API_KEY = "AIzaSyDZ99oCOiXADYq2dNeZX6mIdwoS_1ZSMRg"
+GEMINI_API_KEY = "AIzaSyAMfa91FpMEqNgs4rKuP5hX2ypqhB7Ib3Y"
 
 SYSTEM_PROMPT = """Eres el Tutor Virtual de AKADEMUS. Tu función es resolver dudas académicas de manera pedagógica.
 
@@ -26,7 +26,7 @@ async def llamar_gemini(pregunta: str) -> str:
     import urllib.request
     import json
     
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
     
     payload = {
         "contents": [{"parts": [{"text": SYSTEM_PROMPT + "\n\nPregunta del alumno:\n" + pregunta}]}],
