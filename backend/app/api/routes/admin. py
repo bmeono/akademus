@@ -1,0 +1,12 @@
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from app.core.security import require_role, get_current_user, http_ bearer
+from app.core.db import get_ db_ connection
+router = APIRouter(prefix="/admin", tags=["admin"])
+
+class PermisoUpdate(BaseModel):
+    usuario_ id: int
+    seccion: str
+    tiene_acceso: bool
+
+def get_admin_router(): return router
