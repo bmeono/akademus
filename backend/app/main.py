@@ -31,9 +31,33 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"Conexión a PostgreSQL: ERROR - {e}")
     
-    yield
+    # Run migrations on startup
+    try:
+        from psycopg2 import connect
+        conn = connect(
+            host=settings.db_host,
+            port=settings.db_port,
+            user=settings.db_user,
+            password=settings.db_password,
+            database=settings.db_name,
+        )
+        cur = conn.cursor()
+        try:
+            cur.execute("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS consultas_ia_disponibles INT DEFAULT 10")
+            print("Columna consultas_ia_disponibles creada")
+        except: pass
+        try:
+            cur.execute(""" CREATE TABLE IF NOT EXISTS comunidad_consultas ( id SERIAL PRIMARY KEY, usuario_id INT REFERENCES usuarios(id), materia VARCHAR(100), pregunta TEXT, respuesta TEXT, fecha_consulta TIMESTAMP DEFAULT CURRENT_TIMESTAMP ) """)
+            print("Tabla comunidad_consultas creada")
+        except: pass
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Migracion error: {e}")
     
-    # Cerrar pool de conexiones alshutdown
+    yield
+
+    # Cerrar pool de conexiones al shutdown
     from app.core.db import close_pool
     close_pool()
     print("Cerrando aplicación - pool de conexiones cerrado")
@@ -69,15 +93,9 @@ app.include_router(comunidad.router)
 
 @app.get("/")
 async def root():
-    """Endpoint raíz."""
-    return {
-        "name": settings.app_name,
-        "version": settings.app_version,
-        "status": "online",
-    }
+    return {"status": "ok", "version": settings.app_version}
 
 
 @app.get("/health")
 async def health():
-    """Health check."""
     return {"status": "healthy"}
