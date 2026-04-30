@@ -12,7 +12,8 @@ export default function DashboardLayout() {
 
   useEffect(() => {
     const init = async () => {
-      if (user && permisos) {
+      //if (user && permisos) {
+      if (user && Object.keys(permisos).length > 0) {
         setLoading(false);
         return;
       }
