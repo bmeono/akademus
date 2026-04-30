@@ -1203,7 +1203,7 @@ export default function AdminPage() {
                     </button>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {['dashboard', 'simulacros', 'temas_debiles', 'flashcards'].map(seccion => {
+                    {['dashboard', 'simulacros', 'temas_debiles', 'flashcards', 'comunidad'].map(seccion => {
                       const perm = (u.permisos || []).find((p: any) => p.seccion === seccion);
                       const valorOriginal = perm?.tiene_acceso !== false;
                       const valorEditado = getPermisoEditando(u.id, seccion, valorOriginal);

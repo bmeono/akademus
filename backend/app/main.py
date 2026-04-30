@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from .core.config import get_settings
-from .api.routes import auth, users, simulacros, flashcards, feynman, dashboard, admin
+from .api.routes import auth, users, simulacros, flashcards, feynman, dashboard, admin, comunidad
 
 
 settings = get_settings()
@@ -64,6 +64,7 @@ app.include_router(feynman.router)
 app.include_router(feynman.admin_router)
 app.include_router(dashboard.router)
 app.include_router(admin.router)
+app.include_router(comunidad.router)
 
 
 @app.get("/")

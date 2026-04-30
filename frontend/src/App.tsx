@@ -8,6 +8,7 @@ import FlashcardsPage from './pages/FlashcardsPage';
 import FeynmanPage from './pages/FeynmanPage';
 import AdminPage from './pages/AdminPage';
 import TemasDebilesPage from './pages/TemasDebilesPage';
+import ComunidadPage from './pages/ComunidadPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const hasToken = localStorage.getItem('access_token');
@@ -50,6 +51,7 @@ export default function App() {
           <Route path="feynman" element={<FeynmanPage />} />
           <Route path="admin" element={<AdminPage />} />
           <Route path="temas-debiles" element={<TemasDebilesPage />} />
+          <Route path="comunidad" element={<ComunidadPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

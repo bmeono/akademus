@@ -15,6 +15,7 @@ interface Permisos {
   simulacros?: boolean;
   temas_debiles?: boolean;
   flashcards?: boolean;
+  comunidad?: boolean;
 }
 
 interface AppState {
@@ -42,7 +43,7 @@ export const useAppStore = create<AppState>()(
     (set) => ({
       user: null,
       isAuthenticated: false,
-      permisos: { dashboard: true, simulacros: true, temas_debiles: true, flashcards: true },
+      permisos: { dashboard: true, simulacros: true, temas_debiles: true, flashcards: true, comunidad: true },
       sidebarOpen: true,
       
       setUser: (user) => set({ user, isAuthenticated: !!user }),

@@ -580,6 +580,10 @@ async def update_usuario_permiso(data: PermisoUpdate, current_user: dict = Depen
             DO UPDATE SET tiene_acceso = %s
         """, (usuario_id, data.seccion, data.tiene_acceso, data.tiene_acceso))
         
+        # Si se activa "comunidad", asignar 10 creditos
+        if data.seccion == "comunidad" and data.tiene_acceso:
+            cur.execute("UPDATE usuarios SET consultas_ia_disponibles = 10 WHERE id = %s", (usuario_id,))
+        
         conn.commit()
         return {"usuario_id": usuario_id, "seccion": data.seccion, "tiene_acceso": data.tiene_acceso}
     except Exception as e:

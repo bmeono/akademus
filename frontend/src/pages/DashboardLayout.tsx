@@ -3,7 +3,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { useAppStore } from '../store';
 import { usersAPI, adminAPI, api } from '../services/api';
 import { usersAPI as authService } from '../services/api';
-import { LayoutDashboard, BookOpen, Brain, PenTool, LogOut, User, Settings, AlertTriangle } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Brain, PenTool, LogOut, User, Settings, AlertTriangle, MessageCircle } from 'lucide-react';
 
 export default function DashboardLayout() {
   const { user, logout, setUser, setAuthenticated, setPermisos, permisos } = useAppStore();
@@ -59,6 +59,7 @@ useEffect(() => {
     permisos?.simulacros === true && { icon: BookOpen, label: 'Simulacros', href: '/simulacros' },
     permisos?.temas_debiles === true && { icon: AlertTriangle, label: 'Temas Débiles', href: '/temas-debiles' },
     permisos?.flashcards === true && { icon: Brain, label: 'Flashcards', href: '/flashcards' },
+    permisos?.comunidad === true && { icon: MessageCircle, label: 'Comunidad IA', href: '/comunidad' },
   ].filter(Boolean);
 
   // rol_id 1 = administrador, rol_id 2 = usuario común

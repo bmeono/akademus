@@ -137,4 +137,12 @@ function logout() {
   window.location.href = '/login';
 }
 
+// Comunidad IA
+export const comunidadAPI = {
+  getAsignaturas: () => api.get('/comunidad/asignaturas'),
+  consultar: (materia: string, pregunta: string) => api.post('/comunidad/consultar', { materia, pregunta }),
+  getHistorial: () => api.get('/comunidad/historial'),
+  getCreditos: () => api.get('/comunidad/creditos'),
+};
+
 export default api;
