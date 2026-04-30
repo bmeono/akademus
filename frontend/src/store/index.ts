@@ -43,14 +43,17 @@ export const useAppStore = create<AppState>()(
     (set) => ({
       user: null,
       isAuthenticated: false,
-      permisos: { dashboard: true, simulacros: true, temas_debiles: true, flashcards: true, comunidad: true },
+      //permisos: { dashboard: true, simulacros: true, temas_debiles: true, flashcards: true, comunidad: true },
+      permisos:{},
       sidebarOpen: true,
       
       setUser: (user) => set({ user, isAuthenticated: !!user }),
       setAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
       setPermisos: (permisos) => set({ permisos }),
       toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
-      logout: () => set({ user: null, isAuthenticated: false, permisos: { dashboard: true, simulacros: true, temas_debiles: true, flashcards: true } }),
+      //logout: () => set({ user: null, isAuthenticated: false, permisos: { dashboard: true, simulacros: true, temas_debiles: true, flashcards: true } }),
+      logout: () => set({ user: null, isAuthenticated: false, permisos: {} 
+      
     }),
     {
       name: 'akademus-storage',
