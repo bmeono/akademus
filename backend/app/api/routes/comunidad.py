@@ -20,13 +20,13 @@ async def llamar_gemini(pregunta: str) -> str:
     if not GEMINI_API_KEY:
         raise HTTPException(status_code=500, detail="API Key de Gemini no configurada en el servidor.")
 
-   url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
-    
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
+
     payload = {
-        "contents": [{"parts": [{"text": f"{SYSTEM_PROMPT}\n\nPregunta:\n{pregunta}"}]}], 
+        "contents": [{"parts": [{"text": f"{SYSTEM_PROMPT}\n\nPregunta:\n{pregunta}"}]}],
         "generationConfig": {"temperature": 0.7, "maxOutputTokens": 2048}
     }
-    
+
     try:
         async with httpx.AsyncClient(timeout=60) as client:
             response = await client.post(url, json=payload)
@@ -56,35 +56,35 @@ async def hacer_consulta(req: ConsultaRequest, current_user: dict = Depends(get_
         user_id = current_user["id"]
         conn = get_db_connection()
         cur = conn.cursor()
-        
+
         cur.execute("SELECT consultas_ia_disponibles FROM usuarios WHERE id = %s", (str(user_id),))
         row = cur.fetchone()
         print(f"DEBUG creditos row: {row}", flush=True)
-        
+
         if not row:
             conn.close()
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
-            
+
         creditos = row[0] if row[0] else 0
         if creditos <= 0:
             conn.close()
             raise HTTPException(status_code=403, detail="Sin creditos disponibles")
-            
+
         respuesta = await llamar_gemini(req.pregunta)
         print(f"DEBUG Gemini respondió OK", flush=True)
-        
+
         cur.execute(
-            "INSERT INTO comunidad_consultas (usuario_id, materia, pregunta, respuesta) VALUES (%s, %s, %s, %s)", 
+            "INSERT INTO comunidad_consultas (usuario_id, materia, pregunta, respuesta) VALUES (%s, %s, %s, %s)",
             (user_id, req.materia, req.pregunta, respuesta)
         )
         cur.execute(
-            "UPDATE usuarios SET consultas_ia_disponibles = consultas_ia_disponibles - 1 WHERE id = %s", 
+            "UPDATE usuarios SET consultas_ia_disponibles = consultas_ia_disponibles - 1 WHERE id = %s",
             (str(user_id),)
         )
         conn.commit()
         conn.close()
         return {"respuesta": respuesta}
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -98,7 +98,7 @@ async def get_historial(current_user: dict = Depends(get_current_user)):
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute(
-            "SELECT id, materia, pregunta, respuesta, fecha_consulta FROM comunidad_consultas WHERE usuario_id = %s ORDER BY fecha_consulta DESC LIMIT 50", 
+            "SELECT id, materia, pregunta, respuesta, fecha_consulta FROM comunidad_consultas WHERE usuario_id = %s ORDER BY fecha_consulta DESC LIMIT 50",
             (str(user_id),)
         )
         rows = cur.fetchall()
