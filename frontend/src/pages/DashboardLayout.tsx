@@ -49,7 +49,6 @@ useEffect(() => {
   };
   init();
 }, []);
-
 //  const menuItems = [
 //    permisos?.dashboard === true && { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
 //    permisos?.simulacros === true && { icon: BookOpen, label: 'Simulacros', href: '/simulacros' },
