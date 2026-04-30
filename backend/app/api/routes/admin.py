@@ -599,7 +599,7 @@ async def get_mis_permisos(credentials = Depends(http_bearer)):
     logger.info(f"credentials: {credentials}")
     
     if not credentials:
-        return {"dashboard": False, "simulacros": False, "temas_debiles": False, "flashcards": False, "admin": False}
+        return {"dashboard": False, "simulacros": False, "temas_debiles": False, "flashcards": False, "comunidad": False,"admin": False}
     
     token = credentials.credentials
     logger.info(f"token: {token[:20]}...")
@@ -608,13 +608,13 @@ async def get_mis_permisos(credentials = Depends(http_bearer)):
         payload = decode_token(token)
     except Exception as e:
         logger.info(f"decode_token error: {e}")
-        return {"dashboard": False, "simulacros": False, "temas_debiles": False, "flashcards": False, "admin": False}
+        return {"dashboard": False, "simulacros": False, "temas_debiles": False, "flashcards": False, "comunidad": False,"admin": False}
     
     user_id = payload.get("sub")
     logger.info(f"user_id: {user_id}")
     
     if not user_id:
-        return {"dashboard": False, "simulacros": False, "temas_debiles": False, "flashcards": False, "admin": False}
+        return {"dashboard": False, "simulacros": False, "temas_debiles": False, "flashcards": False, "comunidad": False, "admin": False}
     
     try:
         conn = get_db_connection()
@@ -627,7 +627,7 @@ async def get_mis_permisos(credentials = Depends(http_bearer)):
         
         # Admin (rol_id=1) tiene todos los permisos
         if rol_id == 1:
-            return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True, "feynman": True, "admin": True}
+            return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True, "feynman": True, "comunidad": True,"admin": True}
         
         # Get permisos de la DB
         cur.execute("SELECT seccion, tiene_acceso FROM usuario_permisos WHERE usuario_id = %s", (user_id,))
@@ -637,7 +637,7 @@ async def get_mis_permisos(credentials = Depends(http_bearer)):
         
         if not permisos:
             # Default para usuarios sin permisos definidos
-            return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True, "feynman": True, "admin": False}
+            return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True, "feynman": True, "flashcards": True,"admin": False}
         
         # Normalizar permisos - asegurar que todas las claves existan
         normalized = {
@@ -646,9 +646,10 @@ async def get_mis_permisos(credentials = Depends(http_bearer)):
             "temas_debiles": permisos.get("temas_debiles", False),
             "flashcards": permisos.get("flashcards", False),
             "feynman": permisos.get("feynman", False),
+            "comunidad": permisos.get("comunidad", False), 
             "admin": permisos.get("admin", False),
         }
         
         return normalized
     except:
-        return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True, "feynman": True, "admin": False}
+        return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True, "feynman": True,"comunidad": True, "admin": False}
