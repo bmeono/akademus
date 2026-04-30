@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-// Tipos
 interface User {
   id: string;
   nombre: string;
@@ -19,17 +18,10 @@ interface Permisos {
 }
 
 interface AppState {
-  // Auth
   user: User | null;
   isAuthenticated: boolean;
-  
-  // Permisos
   permisos: Permisos;
-  
-  // UI
   sidebarOpen: boolean;
-  
-  // Actions
   setUser: (user: User | null) => void;
   setAuthenticated: (value: boolean) => void;
   setPermisos: (permisos: Permisos) => void;
@@ -37,23 +29,18 @@ interface AppState {
   logout: () => void;
 }
 
-// Store principal
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
       user: null,
       isAuthenticated: false,
-      //permisos: { dashboard: true, simulacros: true, temas_debiles: true, flashcards: true, comunidad: true },
-      permisos:{},
+      permisos: {},
       sidebarOpen: true,
-      
       setUser: (user) => set({ user, isAuthenticated: !!user }),
       setAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
       setPermisos: (permisos) => set({ permisos }),
       toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
-      //logout: () => set({ user: null, isAuthenticated: false, permisos: { dashboard: true, simulacros: true, temas_debiles: true, flashcards: true } }),
-      logout: () => set({ user: null, isAuthenticated: false, permisos: {} 
-      
+      logout: () => set({ user: null, isAuthenticated: false, permisos: {} }),
     }),
     {
       name: 'akademus-storage',
@@ -62,14 +49,12 @@ export const useAppStore = create<AppState>()(
   )
 );
 
-// Store para simulacro
 interface SimulacroState {
   simulacroId: number | null;
   preguntaActual: number;
   totalPreguntas: number;
   respuestas: Map<number, number>;
   tiempoRestante: number;
-  
   setSimulacro: (id: number, total: number) => void;
   setPregunta: (orden: number) => void;
   agregarRespuesta: (preguntaId: number, opcionId: number) => void;
@@ -83,7 +68,6 @@ export const useSimulacroStore = create<SimulacroState>()((set) => ({
   totalPreguntas: 0,
   respuestas: new Map(),
   tiempoRestante: 0,
-  
   setSimulacro: (id, total) => set({ simulacroId: id, totalPreguntas: total, preguntaActual: 1, respuestas: new Map() }),
   setPregunta: (orden) => set({ preguntaActual: orden }),
   agregarRespuesta: (preguntaId, opcionId) => set((state) => {
@@ -95,12 +79,10 @@ export const useSimulacroStore = create<SimulacroState>()((set) => ({
   reset: () => set({ simulacroId: null, preguntaActual: 1, totalPreguntas: 0, respuestas: new Map(), tiempoRestante: 0 }),
 }));
 
-// Store para flashcards
 interface FlashcardState {
   flashcardActual: number;
   total: number;
   mostrandoDorso: boolean;
-  
   setFlashcard: (index: number, total?: number) => void;
   toggleDorso: () => void;
   siguiente: () => void;
@@ -109,9 +91,8 @@ interface FlashcardState {
 
 export const useFlashcardStore = create<FlashcardState>()((set) => ({
   flashcardActual: 0,
- Total: 0,
+  total: 0,
   mostrandoDorso: false,
-  
   setFlashcard: (index, total) => set({ flashcardActual: index, total: total, mostrandoDorso: false }),
   toggleDorso: () => set((state) => ({ mostrandoDorso: !state.mostrandoDorso })),
   siguiente: () => set((state) => ({ flashcardActual: state.flashcardActual + 1, mostrandoDorso: false })),
