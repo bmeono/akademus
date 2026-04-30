@@ -1,0 +1,23 @@
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from app.core.security import get_ current_ user
+from app. core. db import get_ db_ connection
+router = APIRouter( prefix="/comunidad", tags=["comunidad"])
+GEMINI_ API_ KEY = "AIzaSyAMfa91FpMEqNgs4rKuP5hX2ypqhB7Ib3Y"
+SYSTEM_ PROMPT = "Eres el Tutor Virtual de AKADEMUS."
+class ConsultaRequest( BaseModel):
+    materia: str
+    pregunta: str
+async def llamar_ gemini( pregunta: str) -> str:
+    import urllib. request
+    import json
+    url = "https://generativelanguage. googleapis. com/ v1beta/ models/ gemini-1.5- flash: generateContent? key=" + GEMINI_ API_ KEY
+    payload = {"contents": [{"parts": [{"text": SYSTEM_ PROMPT + "\n\ nPregunta:\n" + pregunta}]}], "generationConfig": {"temperature": 0.7, "maxOutputTokens": 2048}}
+    data = json. dumps( payload). encode( "utf-8")
+    req = urllib. request. Request( url, data=data, headers={"Content- Type": "application/ json"})
+    try:
+        response = urllib. request. urlopen( req, timeout=60)
+        result = json. loads( response. read(). decode( "utf-8"))
+        return result["candidates"][0]["content"]["parts"][0]["text"]
+    except Exception as e:
+        raise HTTPException( status_ code=500, detail="Error Gemini: " + str( e))
