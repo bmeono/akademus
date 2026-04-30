@@ -1,7 +1,7 @@
 import os
 import json
 import traceback
-import urllib.request
+import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from app.core.security import get_current_user
@@ -27,14 +27,18 @@ async def llamar_gemini(pregunta: str) -> str:
         "generationConfig": {"temperature": 0.7, "maxOutputTokens": 2048}
     }
     
-    data = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-    
     try:
-        response = urllib.request.urlopen(req, timeout=60)
-        result = json.loads(response.read().decode("utf-8"))
-        return result["candidates"][0]["content"]["parts"][0]["text"]
+        async with httpx.AsyncClient(timeout=60) as client:
+            response = await client.post(url, json=payload)
+            response.raise_for_status()
+            result = response.json()
+            print(f"DEBUG Gemini status: {response.status_code}", flush=True)
+            return result["candidates"][0]["content"]["parts"][0]["text"]
+    except httpx.HTTPStatusError as e:
+        print(f"DEBUG Gemini HTTP error: {e.response.status_code} - {e.response.text}", flush=True)
+        raise HTTPException(status_code=500, detail=f"Error de Gemini: {e.response.text}")
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error en comunicación con Gemini: {str(e)}")
 
 @router.get("/asignaturas")
@@ -53,7 +57,6 @@ async def hacer_consulta(req: ConsultaRequest, current_user: dict = Depends(get_
         conn = get_db_connection()
         cur = conn.cursor()
         
-        # ojo: PostgreSQL convierte todo a minúsculas
         cur.execute("SELECT consultas_ia_disponibles FROM usuarios WHERE id = %s", (str(user_id),))
         row = cur.fetchone()
         print(f"DEBUG creditos row: {row}", flush=True)
