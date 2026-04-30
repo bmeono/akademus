@@ -69,7 +69,7 @@ async def hacer_consulta(
     # Verificar créditos
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT consultas_ia_disponibles FROM usuarios WHERE id = %s", (user_id,))
+    cur.execute("SELECT consultas_ia_disponibles FROM usuarios WHERE id = %s", (str(user_id),))
     row = cur.fetchone()
     if not row:
         conn.close()
@@ -94,7 +94,7 @@ async def hacer_consulta(
     """, (user_id, req.materia, req.pregunta, respuesta))
     
     # Descontar crédito
-    cur.execute("UPDATE usuarios SET consultas_ia_disponibles = consultas_ia_disponibles - 1 WHERE id = %s", (user_id,))
+    cur.execute("UPDATE usuarios SET consultas_ia_disponibles = consultas_ia_disponibles - 1 WHERE id = %s", (str(user_id),))
     conn.commit()
     conn.close()
     
@@ -113,7 +113,7 @@ async def get_historial(current_user: dict = Depends(get_current_user)):
         WHERE usuario_id = %s
         ORDER BY fecha_consulta DESC
         LIMIT 50
-    """, (user_id,))
+    """, (str(user_id),))
     rows = cur.fetchall()
     conn.close()
     return {
@@ -133,7 +133,7 @@ async def get_creditos(current_user: dict = Depends(get_current_user)):
     user_id = current_user["id"]
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT consultas_ia_disponibles FROM usuarios WHERE id = %s", (user_id,))
+    cur.execute("SELECT consultas_ia_disponibles FROM usuarios WHERE id = %s", (str(user_id),))
     row = cur.fetchone()
     conn.close()
     return {"creditos": row[0] if row and row[0] else 0}
