@@ -92,7 +92,7 @@ export default function DashboardLayout() {
               key={item.href}
               href={item.href}
               className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-primary-600 transition-colors"
-            >
+            <a>
               <item.icon className="w-5 h-5" />
               {item.label}
             </a>
