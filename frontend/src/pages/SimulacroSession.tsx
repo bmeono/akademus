@@ -4,7 +4,7 @@ import { simulacrosAPI } from '../services/api';
 import api from '../services/api';
 
 interface Opcion   { id: number; texto: string; }
-interface Pregunta { id: number; enunciado: string; imagen_url?: string; dificultad: number; orden: number; opciones: Opcion[]; }
+interface Pregunta { id: number; enunciado: string; imagen_url?: string; dificultad: number; orden: number; opciones: Opcion[]; universidad?: string; an_exam?: string; }
 interface Resultado { id: number; total_preguntas: number; aciertos: number; errores: number; sin_responder: number; puntaje_total: number; }
 
 export default function SimulacroSession() {
@@ -336,9 +336,17 @@ export default function SimulacroSession() {
                     )}
                   </div>
 
-                  <p className="text-lg text-slate-100 leading-relaxed mb-6">
+                  <p className="text-lg text-slate-100 leading-relaxed mb-3">
                     {currentPregunta.enunciado}
                   </p>
+
+                  {(currentPregunta.universidad || currentPregunta.an_exam) && (
+                    <div className="flex items-center gap-2 mb-5">
+                      <span className="px-3 py-1 bg-slate-700 text-slate-400 text-xs rounded-full font-medium tracking-wide">
+                        {[currentPregunta.universidad, currentPregunta.an_exam].filter(Boolean).join(' · ')}
+                      </span>
+                    </div>
+                  )}
 
                   {currentPregunta.imagen_url && (
                     <img
