@@ -3,14 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { simulacrosAPI } from '../services/api';
 import { useAppStore } from '../store';
 import { Card } from '../components/common/Card';
+import { BookOpen, AlertTriangle, PlayCircle } from 'lucide-react';
 
 export default function SimulacroPage() {
   const navigate = useNavigate();
   const { permisos } = useAppStore();
-  const [especialidades, setEspecialidades] = useState<any[]>([]);
+  const [especialidades, setEspecialidades]             = useState<any[]>([]);
   const [selectedEspecialidad, setSelectedEspecialidad] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading]                           = useState(false);
+  const [initLoading, setInitLoading]                   = useState(true);
+  const [error, setError]                               = useState<string | null>(null);
   const [simulacrosDisponibles, setSimulacrosDisponibles] = useState<number | null>(null);
 
   useEffect(() => {
@@ -18,11 +20,24 @@ export default function SimulacroPage() {
       navigate('/dashboard');
       return;
     }
-    simulacrosAPI.getEspecialidades().then(r => setEspecialidades(r.data));
-
-    // Cargar créditos disponibles
-    simulacrosAPI.getCreditos().then(r => setSimulacrosDisponibles(r.data.simulacros_disponibles)).catch(() => {});
+    init();
   }, [permisos]);
+
+  const init = async () => {
+    setInitLoading(true);
+    try {
+      const [espRes, creditosRes] = await Promise.all([
+        simulacrosAPI.getEspecialidades(),
+        simulacrosAPI.getCreditos().catch(() => ({ data: { simulacros_disponibles: null } })),
+      ]);
+      setEspecialidades(espRes.data);
+      setSimulacrosDisponibles(creditosRes.data.simulacros_disponibles);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setInitLoading(false);
+    }
+  };
 
   const iniciarSimulacro = async () => {
     if (!selectedEspecialidad) return;
@@ -32,6 +47,7 @@ export default function SimulacroPage() {
       const { data } = await simulacrosAPI.iniciarPorEspecialidad({
         especialidad_id: selectedEspecialidad,
       });
+      // Si devuelve un simulacro existente (en_curso) o uno nuevo, ambos van a la sesión
       navigate(`/simulacros/${data.simulacro_id}`);
     } catch (e: any) {
       const status = e.response?.status;
@@ -47,6 +63,14 @@ export default function SimulacroPage() {
   };
 
   const sinCreditos = simulacrosDisponibles !== null && simulacrosDisponibles <= 0;
+
+  if (initLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
@@ -97,7 +121,7 @@ export default function SimulacroPage() {
               <p className="text-xs text-primary-600 mt-1">
                 La distribución de preguntas se basa en el perfil de la especialidad seleccionada.
               </p>
-              <div className="mt-2 text-xs text-primary-700">
+              <div className="mt-2 text-xs text-primary-700 space-y-0.5">
                 <p>Penalización: <strong>-1.125 puntos</strong> por respuesta incorrecta</p>
                 <p>Sin responder: <strong>0 puntos</strong></p>
               </div>
@@ -105,30 +129,46 @@ export default function SimulacroPage() {
           )}
 
           {error && (
-            <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm border border-red-200">
-              ⚠️ {error}
+            <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm border border-red-200 flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              {error}
             </div>
           )}
 
           <button
             onClick={iniciarSimulacro}
             disabled={!selectedEspecialidad || loading || sinCreditos}
-            className="btn btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {loading ? 'Cargando simulacro...' : sinCreditos ? 'Sin simulacros disponibles' : 'Iniciar Simulacro'}
+            {loading ? (
+              <>
+                <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                Cargando simulacro...
+              </>
+            ) : sinCreditos ? (
+              'Sin simulacros disponibles'
+            ) : (
+              <>
+                <PlayCircle className="w-4 h-4" />
+                Iniciar Simulacro
+              </>
+            )}
           </button>
         </div>
       </Card>
 
       <Card>
-        <h2 className="font-semibold text-slate-800 mb-3">Reglas del Simulacro</h2>
+        <h2 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
+          <BookOpen className="w-4 h-4 text-primary-600" />
+          Reglas del Simulacro
+        </h2>
         <ul className="text-sm text-slate-600 space-y-2">
           <li className="flex items-start gap-2">
-            <span className="text-green-600">✓</span>
+            <span className="text-green-600 font-bold">✓</span>
             Respuesta correcta: puntaje según especialidad
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-red-600">✗</span>
+            <span className="text-red-600 font-bold">✗</span>
             Respuesta incorrecta: <strong>-1.125 puntos</strong>
           </li>
           <li className="flex items-start gap-2">
@@ -137,7 +177,11 @@ export default function SimulacroPage() {
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary-600">⏱</span>
-            Tiempo máximo: 180 minutos
+            Tiempo máximo: <strong>180 minutos</strong>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-amber-500">⚡</span>
+            El crédito se descuenta al <strong>terminar</strong> el simulacro
           </li>
         </ul>
       </Card>
