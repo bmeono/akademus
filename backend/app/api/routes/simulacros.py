@@ -79,27 +79,29 @@ async def iniciar_simulacro_especialidad(
     if not config.especialidad_id:
         raise HTTPException(status_code=400, detail="Se requiere seleccionar una especialidad")
 
-    # Verificar simulacros disponibles
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT simulacros_disponibles FROM usuarios WHERE id = %s", (user_id,))
-    row = cur.fetchone()
-    if not row or (row[0] is not None and row[0] <= 0):
-        conn.close()
-        raise HTTPException(status_code=403, detail="Sin simulacros disponibles. Contacta al administrador.")
 
-    # ✅ Verificar que no haya un simulacro en curso
+    # ✅ Si ya hay un simulacro en curso, devolver ese (no crear uno nuevo)
     cur.execute(
-        "SELECT id FROM simulacros WHERE usuario_id = %s AND estado = 'en_curso'",
+        "SELECT id, total_preguntas, duracion_segundos FROM simulacros WHERE usuario_id = %s AND estado = 'en_curso'",
         (user_id,)
     )
     en_curso = cur.fetchone()
     if en_curso:
         conn.close()
-        raise HTTPException(
-            status_code=400,
-            detail=f"Ya tienes un simulacro en curso (ID: {en_curso[0]}). Termínalo antes de iniciar otro."
+        return SimulacroStartResponse(
+            simulacro_id=en_curso[0],
+            total_preguntas=en_curso[1],
+            duracion_segundos=en_curso[2],
         )
+
+    # Verificar créditos disponibles
+    cur.execute("SELECT simulacros_disponibles FROM usuarios WHERE id = %s", (user_id,))
+    row = cur.fetchone()
+    if not row or (row[0] is not None and row[0] <= 0):
+        conn.close()
+        raise HTTPException(status_code=403, detail="Sin simulacros disponibles. Contacta al administrador.")
 
     # Obtener grupo académico de la especialidad
     cur.execute("""
@@ -168,12 +170,6 @@ async def iniciar_simulacro_especialidad(
             INSERT INTO respuestas_simulacro (simulacro_id, pregunta_id, orden, puntaje_pregunta)
             VALUES (%s, %s, %s, %s)
         """, (simulacro_id, pregunta_id, i + 1, puntaje))
-
-    # Descontar simulacro disponible
-    cur.execute(
-        "UPDATE usuarios SET simulacros_disponibles = simulacros_disponibles - 1 WHERE id = %s",
-        (user_id,)
-    )
 
     conn.commit()
     conn.close()
@@ -398,7 +394,8 @@ async def get_todas_preguntas(
     return {
         "preguntas": preguntas,
         "tiempo_restante": int(tiempo_restante),
-        "total_preguntas": len(preguntas)
+        "total_preguntas": len(preguntas),
+        "estado": simulacro[4]   # 'en_curso' | 'finalizado'
     }
 
 
@@ -616,6 +613,12 @@ async def finalizar_simulacro(
             UPDATE simulacros SET puntaje_total = %s, estado = 'finalizado'
             WHERE id = %s
         """, (float(puntaje_total), simulacro_id))
+
+        # ✅ Descontar crédito al finalizar (no al iniciar)
+        cur.execute(
+            "UPDATE usuarios SET simulacros_disponibles = GREATEST(0, simulacros_disponibles - 1) WHERE id = %s",
+            (user_id,)
+        )
 
         # Actualizar max/min puntaje del usuario
         cur.execute("""
