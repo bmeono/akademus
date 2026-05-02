@@ -139,6 +139,10 @@ export default function AdminPage() {
   const [filtroGrupo, setFiltroGrupo] = useState<string>('todos');
   const [filtroEstado, setFiltroEstado] = useState<string>('');
   const [permisosEditando, setPermisosEditando] = useState<any>({});
+  const [publicidad, setPublicidad] = useState<any[]>([]);
+  const [newPubUrl, setNewPubUrl] = useState('');
+  const [newPubLink, setNewPubLink] = useState('');
+  const [newPubDesc, setNewPubDesc] = useState('');
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
@@ -154,6 +158,7 @@ export default function AdminPage() {
     { id: 'temas', label: 'Temas', icon: Settings },
     { id: 'preguntas', label: 'Preguntas', icon: ListChecks },
     { id: 'novedades', label: 'Novedades', icon: Clock },
+    { id: 'publicidad', label: 'Publicidad', icon: Settings },
   ];
 
   useEffect(() => {
@@ -222,6 +227,9 @@ export default function AdminPage() {
         setPreguntas(res.data);
         const asigRes = await api.get('/admin/asignaturas');
         setAsignaturas(asigRes.data);
+      } else if (activeTab === 'publicidad') {
+        const res = await api.get('/admin/publicidad');
+        setPublicidad(res.data);
       } else if (activeTab === 'permisos') {
         const res = await adminAPI.getUsuariosPermisos();
         const data = res.data;
@@ -609,6 +617,112 @@ export default function AdminPage() {
             </div>
           </>
         );
+      case 'publicidad': {
+        return (
+          <div className="space-y-6">
+            <p className="text-slate-600">Gestiona las imágenes publicitarias que aparecen en el dashboard de los usuarios.</p>
+
+            {/* Formulario agregar */}
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+              <h3 className="font-semibold text-slate-800">Agregar imagen</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">URL de la imagen *</label>
+                  <input
+                    type="url"
+                    placeholder="https://..."
+                    value={newPubUrl}
+                    onChange={e => setNewPubUrl(e.target.value)}
+                    className="w-full p-2 border rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Enlace al hacer clic (opcional)</label>
+                  <input
+                    type="url"
+                    placeholder="https://..."
+                    value={newPubLink}
+                    onChange={e => setNewPubLink(e.target.value)}
+                    className="w-full p-2 border rounded-lg text-sm"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Descripción (opcional)</label>
+                <input
+                  type="text"
+                  placeholder="Descripción del anuncio..."
+                  value={newPubDesc}
+                  onChange={e => setNewPubDesc(e.target.value)}
+                  className="w-full p-2 border rounded-lg text-sm"
+                />
+              </div>
+              {newPubUrl && (
+                <div className="rounded-lg overflow-hidden border border-slate-200" style={{height: '100px'}}>
+                  <img src={newPubUrl} alt="Preview" className="w-full h-full object-cover"
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                </div>
+              )}
+              <button
+                onClick={async () => {
+                  if (!newPubUrl.trim()) return alert('La URL de imagen es requerida');
+                  try {
+                    await api.post('/admin/publicidad', { imagen_url: newPubUrl, enlace_url: newPubLink || null, descripcion: newPubDesc || null });
+                    setNewPubUrl(''); setNewPubLink(''); setNewPubDesc('');
+                    loadData();
+                  } catch { alert('Error al agregar'); }
+                }}
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700 transition-colors"
+              >
+                + Agregar imagen
+              </button>
+            </div>
+
+            {/* Lista */}
+            {publicidad.length === 0 ? (
+              <div className="text-center py-8 text-slate-400">No hay imágenes de publicidad.</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {publicidad.map(p => (
+                  <div key={p.id} className={`border rounded-xl overflow-hidden ${p.activa ? 'border-slate-200' : 'border-slate-100 opacity-60'}`}>
+                    <div className="relative" style={{height: '100px'}}>
+                      <img src={p.imagen_url} alt={p.descripcion || ''} className="w-full h-full object-cover" />
+                      <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-medium ${p.activa ? 'bg-green-500 text-white' : 'bg-slate-400 text-white'}`}>
+                        {p.activa ? 'Activa' : 'Inactiva'}
+                      </span>
+                    </div>
+                    <div className="p-3 space-y-2">
+                      {p.descripcion && <p className="text-sm text-slate-600 truncate">{p.descripcion}</p>}
+                      {p.enlace_url && <p className="text-xs text-blue-500 truncate">{p.enlace_url}</p>}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={async () => {
+                            await api.put(\`/admin/publicidad/\${p.id}\`, { activa: !p.activa });
+                            loadData();
+                          }}
+                          className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${p.activa ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
+                        >
+                          {p.activa ? 'Desactivar' : 'Activar'}
+                        </button>
+                        <button
+                          onClick={async () => {
+                            if (!confirm('¿Eliminar esta imagen?')) return;
+                            await api.delete(\`/admin/publicidad/\${p.id}\`);
+                            loadData();
+                          }}
+                          className="px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg text-xs font-medium transition-colors"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      }
       default:
         return null;
     }
@@ -1146,7 +1260,7 @@ export default function AdminPage() {
           }
           return valorOriginal;
         };
-
+        
         const togglePermisoEditando = (usuarioId: string, seccion: string, valorOriginal: boolean) => {
           setPermisosEditando(prev => ({
             ...prev,
@@ -1156,10 +1270,11 @@ export default function AdminPage() {
             }
           }));
         };
-
+        
         const guardarPermisos = async (usuarioId: string) => {
           const cambios = permisosEditando[usuarioId];
           if (!cambios) return;
+          
           for (const [seccion, tieneAcceso] of Object.entries(cambios)) {
             await adminAPI.updatePermiso({
               usuario_id: usuarioId,
@@ -1167,29 +1282,19 @@ export default function AdminPage() {
               tiene_acceso: tieneAcceso
             });
           }
+          
           setPermisosEditando(prev => {
             const newState = { ...prev };
             delete newState[usuarioId];
             return newState;
           });
+          
           loadData();
         };
-
-        const guardarCreditos = async (usuarioId: string, tipo: 'ia' | 'sim', valor: number) => {
-          try {
-            await api.put(`/admin/usuarios/${usuarioId}/creditos`, 
-              tipo === 'ia' ? { consultas_ia: valor } : { simulacros: valor }
-            );
-            alert('Créditos actualizados');
-            loadData();
-          } catch (e) {
-            alert('Error al actualizar créditos');
-          }
-        };
-
+        
         return (
           <div className="space-y-4">
-            <p className="text-slate-600">Administra los permisos de acceso y créditos de cada usuario.</p>
+            <p className="text-slate-600">Administra los permisos de acceso de cada usuario.</p>
             {usuarios.map(u => {
               const tieneCambios = permisosEditando[u.id] && Object.keys(permisosEditando[u.id]).length > 0;
               return (
@@ -1203,17 +1308,15 @@ export default function AdminPage() {
                       onClick={() => guardarPermisos(u.id)}
                       disabled={!tieneCambios}
                       className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                        tieneCambios
-                          ? 'bg-primary-600 text-white hover:bg-primary-700'
+                        tieneCambios 
+                          ? 'bg-primary-600 text-white hover:bg-primary-700' 
                           : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                       }`}
                     >
-                      Guardar permisos
+                      Actualizar
                     </button>
                   </div>
-
-                  {/* Checkboxes de secciones */}
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {['dashboard', 'simulacros', 'temas_debiles', 'flashcards', 'comunidad'].map(seccion => {
                       const perm = (u.permisos || []).find((p: any) => p.seccion === seccion);
                       const valorOriginal = perm?.tiene_acceso !== false;
@@ -1226,64 +1329,120 @@ export default function AdminPage() {
                             onChange={() => togglePermisoEditando(u.id, seccion, valorOriginal)}
                             className="w-4 h-4 rounded text-primary-600"
                           />
-                          <span className="text-sm capitalize">{seccion.replace(/_/g, ' ')}</span>
+                          <span className="text-sm capitalize">{seccion.replace('_', ' ')}</span>
                         </label>
                       );
                     })}
                   </div>
+                </Card>
+              );
+            })}
+          </div>
+        );
+      }
+      case 'publicidad': {
+        return (
+          <div className="space-y-6">
+            <p className="text-slate-600">Gestiona las imágenes publicitarias que aparecen en el dashboard de los usuarios.</p>
 
-                  {/* Créditos */}
-                  <div className="border-t pt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-xs font-medium text-slate-500 block mb-1">
-                        Créditos IA (actual: {u.consultas_ia_disponibles ?? 0})
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="number"
-                          min="0"
-                          defaultValue={u.consultas_ia_disponibles ?? 0}
-                          id={`ia-${u.id}`}
-                          className="flex-1 p-2 border rounded text-sm"
-                        />
-                        <button
-                          onClick={() => {
-                            const val = parseInt((document.getElementById(`ia-${u.id}`) as HTMLInputElement).value);
-                            guardarCreditos(u.id, 'ia', val);
-                          }}
-                          className="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
-                        >
-                          Guardar
-                        </button>
-                      </div>
+            {/* Formulario agregar */}
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+              <h3 className="font-semibold text-slate-800">Agregar imagen</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">URL de la imagen *</label>
+                  <input
+                    type="url"
+                    placeholder="https://..."
+                    value={newPubUrl}
+                    onChange={e => setNewPubUrl(e.target.value)}
+                    className="w-full p-2 border rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Enlace al hacer clic (opcional)</label>
+                  <input
+                    type="url"
+                    placeholder="https://..."
+                    value={newPubLink}
+                    onChange={e => setNewPubLink(e.target.value)}
+                    className="w-full p-2 border rounded-lg text-sm"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Descripción (opcional)</label>
+                <input
+                  type="text"
+                  placeholder="Descripción del anuncio..."
+                  value={newPubDesc}
+                  onChange={e => setNewPubDesc(e.target.value)}
+                  className="w-full p-2 border rounded-lg text-sm"
+                />
+              </div>
+              {newPubUrl && (
+                <div className="rounded-lg overflow-hidden border border-slate-200" style={{height: '100px'}}>
+                  <img src={newPubUrl} alt="Preview" className="w-full h-full object-cover"
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                </div>
+              )}
+              <button
+                onClick={async () => {
+                  if (!newPubUrl.trim()) return alert('La URL de imagen es requerida');
+                  try {
+                    await api.post('/admin/publicidad', { imagen_url: newPubUrl, enlace_url: newPubLink || null, descripcion: newPubDesc || null });
+                    setNewPubUrl(''); setNewPubLink(''); setNewPubDesc('');
+                    loadData();
+                  } catch { alert('Error al agregar'); }
+                }}
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700 transition-colors"
+              >
+                + Agregar imagen
+              </button>
+            </div>
+
+            {/* Lista */}
+            {publicidad.length === 0 ? (
+              <div className="text-center py-8 text-slate-400">No hay imágenes de publicidad.</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {publicidad.map(p => (
+                  <div key={p.id} className={`border rounded-xl overflow-hidden ${p.activa ? 'border-slate-200' : 'border-slate-100 opacity-60'}`}>
+                    <div className="relative" style={{height: '100px'}}>
+                      <img src={p.imagen_url} alt={p.descripcion || ''} className="w-full h-full object-cover" />
+                      <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-medium ${p.activa ? 'bg-green-500 text-white' : 'bg-slate-400 text-white'}`}>
+                        {p.activa ? 'Activa' : 'Inactiva'}
+                      </span>
                     </div>
-                    <div>
-                      <label className="text-xs font-medium text-slate-500 block mb-1">
-                        Simulacros disponibles (actual: {u.simulacros_disponibles ?? 0})
-                      </label>
+                    <div className="p-3 space-y-2">
+                      {p.descripcion && <p className="text-sm text-slate-600 truncate">{p.descripcion}</p>}
+                      {p.enlace_url && <p className="text-xs text-blue-500 truncate">{p.enlace_url}</p>}
                       <div className="flex gap-2">
-                        <input
-                          type="number"
-                          min="0"
-                          defaultValue={u.simulacros_disponibles ?? 0}
-                          id={`sim-${u.id}`}
-                          className="flex-1 p-2 border rounded text-sm"
-                        />
                         <button
-                          onClick={() => {
-                            const val = parseInt((document.getElementById(`sim-${u.id}`) as HTMLInputElement).value);
-                            guardarCreditos(u.id, 'sim', val);
+                          onClick={async () => {
+                            await api.put(\`/admin/publicidad/\${p.id}\`, { activa: !p.activa });
+                            loadData();
                           }}
-                          className="px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                          className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${p.activa ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
                         >
-                          Guardar
+                          {p.activa ? 'Desactivar' : 'Activar'}
+                        </button>
+                        <button
+                          onClick={async () => {
+                            if (!confirm('¿Eliminar esta imagen?')) return;
+                            await api.delete(\`/admin/publicidad/\${p.id}\`);
+                            loadData();
+                          }}
+                          className="px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg text-xs font-medium transition-colors"
+                        >
+                          Eliminar
                         </button>
                       </div>
                     </div>
                   </div>
-                </Card>
-              );
-            })}
+                ))}
+              </div>
+            )}
           </div>
         );
       }
