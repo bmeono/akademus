@@ -622,40 +622,27 @@ export default function AdminPage() {
           <div className="space-y-6">
             <p className="text-slate-600">Gestiona las imágenes publicitarias que aparecen en el dashboard de los usuarios.</p>
 
-            {/* Formulario agregar */}
             <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
               <h3 className="font-semibold text-slate-800">Agregar imagen</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">URL de la imagen *</label>
-                  <input
-                    type="url"
-                    placeholder="https://..."
-                    value={newPubUrl}
+                  <input type="url" placeholder="https://..." value={newPubUrl}
                     onChange={e => setNewPubUrl(e.target.value)}
-                    className="w-full p-2 border rounded-lg text-sm"
-                  />
+                    className="w-full p-2 border rounded-lg text-sm" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Enlace al hacer clic (opcional)</label>
-                  <input
-                    type="url"
-                    placeholder="https://..."
-                    value={newPubLink}
+                  <input type="url" placeholder="https://..." value={newPubLink}
                     onChange={e => setNewPubLink(e.target.value)}
-                    className="w-full p-2 border rounded-lg text-sm"
-                  />
+                    className="w-full p-2 border rounded-lg text-sm" />
                 </div>
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Descripción (opcional)</label>
-                <input
-                  type="text"
-                  placeholder="Descripción del anuncio..."
-                  value={newPubDesc}
+                <input type="text" placeholder="Descripción del anuncio..." value={newPubDesc}
                   onChange={e => setNewPubDesc(e.target.value)}
-                  className="w-full p-2 border rounded-lg text-sm"
-                />
+                  className="w-full p-2 border rounded-lg text-sm" />
               </div>
               {newPubUrl && (
                 <div className="rounded-lg overflow-hidden border border-slate-200" style={{height: '100px'}}>
@@ -665,9 +652,13 @@ export default function AdminPage() {
               )}
               <button
                 onClick={async () => {
-                  if (!newPubUrl.trim()) return alert('La URL de imagen es requerida');
+                  if (!newPubUrl.trim()) { alert('La URL de imagen es requerida'); return; }
                   try {
-                    await api.post('/admin/publicidad', { imagen_url: newPubUrl, enlace_url: newPubLink || null, descripcion: newPubDesc || null });
+                    await api.post('/admin/publicidad', {
+                      imagen_url: newPubUrl,
+                      enlace_url: newPubLink || null,
+                      descripcion: newPubDesc || null,
+                    });
                     setNewPubUrl(''); setNewPubLink(''); setNewPubDesc('');
                     loadData();
                   } catch { alert('Error al agregar'); }
@@ -678,16 +669,15 @@ export default function AdminPage() {
               </button>
             </div>
 
-            {/* Lista */}
             {publicidad.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">No hay imágenes de publicidad.</div>
+              <div className="text-center py-8 text-slate-400">No hay imágenes de publicidad aún.</div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {publicidad.map(p => (
-                  <div key={p.id} className={`border rounded-xl overflow-hidden ${p.activa ? 'border-slate-200' : 'border-slate-100 opacity-60'}`}>
+                  <div key={p.id} className={"border rounded-xl overflow-hidden " + (p.activa ? "border-slate-200" : "border-slate-100 opacity-60")}>
                     <div className="relative" style={{height: '100px'}}>
                       <img src={p.imagen_url} alt={p.descripcion || ''} className="w-full h-full object-cover" />
-                      <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-medium ${p.activa ? 'bg-green-500 text-white' : 'bg-slate-400 text-white'}`}>
+                      <span className={"absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-medium " + (p.activa ? "bg-green-500 text-white" : "bg-slate-400 text-white")}>
                         {p.activa ? 'Activa' : 'Inactiva'}
                       </span>
                     </div>
@@ -697,17 +687,17 @@ export default function AdminPage() {
                       <div className="flex gap-2">
                         <button
                           onClick={async () => {
-                            await api.put(\`/admin/publicidad/\${p.id}\`, { activa: !p.activa });
+                            await api.put('/admin/publicidad/' + p.id, { activa: !p.activa });
                             loadData();
                           }}
-                          className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${p.activa ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
+                          className={"flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors " + (p.activa ? "bg-amber-100 text-amber-700 hover:bg-amber-200" : "bg-green-100 text-green-700 hover:bg-green-200")}
                         >
                           {p.activa ? 'Desactivar' : 'Activar'}
                         </button>
                         <button
                           onClick={async () => {
                             if (!confirm('¿Eliminar esta imagen?')) return;
-                            await api.delete(\`/admin/publicidad/\${p.id}\`);
+                            await api.delete('/admin/publicidad/' + p.id);
                             loadData();
                           }}
                           className="px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg text-xs font-medium transition-colors"
@@ -1337,112 +1327,6 @@ export default function AdminPage() {
                 </Card>
               );
             })}
-          </div>
-        );
-      }
-      case 'publicidad': {
-        return (
-          <div className="space-y-6">
-            <p className="text-slate-600">Gestiona las imágenes publicitarias que aparecen en el dashboard de los usuarios.</p>
-
-            {/* Formulario agregar */}
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
-              <h3 className="font-semibold text-slate-800">Agregar imagen</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">URL de la imagen *</label>
-                  <input
-                    type="url"
-                    placeholder="https://..."
-                    value={newPubUrl}
-                    onChange={e => setNewPubUrl(e.target.value)}
-                    className="w-full p-2 border rounded-lg text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Enlace al hacer clic (opcional)</label>
-                  <input
-                    type="url"
-                    placeholder="https://..."
-                    value={newPubLink}
-                    onChange={e => setNewPubLink(e.target.value)}
-                    className="w-full p-2 border rounded-lg text-sm"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Descripción (opcional)</label>
-                <input
-                  type="text"
-                  placeholder="Descripción del anuncio..."
-                  value={newPubDesc}
-                  onChange={e => setNewPubDesc(e.target.value)}
-                  className="w-full p-2 border rounded-lg text-sm"
-                />
-              </div>
-              {newPubUrl && (
-                <div className="rounded-lg overflow-hidden border border-slate-200" style={{height: '100px'}}>
-                  <img src={newPubUrl} alt="Preview" className="w-full h-full object-cover"
-                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                </div>
-              )}
-              <button
-                onClick={async () => {
-                  if (!newPubUrl.trim()) return alert('La URL de imagen es requerida');
-                  try {
-                    await api.post('/admin/publicidad', { imagen_url: newPubUrl, enlace_url: newPubLink || null, descripcion: newPubDesc || null });
-                    setNewPubUrl(''); setNewPubLink(''); setNewPubDesc('');
-                    loadData();
-                  } catch { alert('Error al agregar'); }
-                }}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700 transition-colors"
-              >
-                + Agregar imagen
-              </button>
-            </div>
-
-            {/* Lista */}
-            {publicidad.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">No hay imágenes de publicidad.</div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {publicidad.map(p => (
-                  <div key={p.id} className={`border rounded-xl overflow-hidden ${p.activa ? 'border-slate-200' : 'border-slate-100 opacity-60'}`}>
-                    <div className="relative" style={{height: '100px'}}>
-                      <img src={p.imagen_url} alt={p.descripcion || ''} className="w-full h-full object-cover" />
-                      <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-medium ${p.activa ? 'bg-green-500 text-white' : 'bg-slate-400 text-white'}`}>
-                        {p.activa ? 'Activa' : 'Inactiva'}
-                      </span>
-                    </div>
-                    <div className="p-3 space-y-2">
-                      {p.descripcion && <p className="text-sm text-slate-600 truncate">{p.descripcion}</p>}
-                      {p.enlace_url && <p className="text-xs text-blue-500 truncate">{p.enlace_url}</p>}
-                      <div className="flex gap-2">
-                        <button
-                          onClick={async () => {
-                            await api.put(\`/admin/publicidad/\${p.id}\`, { activa: !p.activa });
-                            loadData();
-                          }}
-                          className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${p.activa ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
-                        >
-                          {p.activa ? 'Desactivar' : 'Activar'}
-                        </button>
-                        <button
-                          onClick={async () => {
-                            if (!confirm('¿Eliminar esta imagen?')) return;
-                            await api.delete(\`/admin/publicidad/\${p.id}\`);
-                            loadData();
-                          }}
-                          className="px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg text-xs font-medium transition-colors"
-                        >
-                          Eliminar
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         );
       }
