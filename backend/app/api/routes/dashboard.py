@@ -117,7 +117,6 @@ async def get_evolucion(current_user: dict = Depends(get_current_user)):
     conn = get_db_connection()
     cur = conn.cursor()
 
-    # Últimas 8 semanas
     cur.execute(
         """
         SELECT 
@@ -184,19 +183,16 @@ async def get_estadisticas_usuario(current_user: dict = Depends(get_current_user
     conn = get_db_connection()
     cur = conn.cursor()
 
-    # Obtener max/min puntaje
     cur.execute("""
         SELECT max_puntaje, min_puntaje FROM usuarios WHERE id = %s
     """, (user_id,))
     stats = cur.fetchone()
 
-    # Obtener total de simulacros
     cur.execute("""
         SELECT COUNT(*) FROM simulacros WHERE usuario_id = %s AND estado = 'finalizado'
     """, (user_id,))
     total_simulacros = cur.fetchone()[0]
 
-    # Obtener último puntaje
     cur.execute("""
         SELECT puntaje_total FROM simulacros 
         WHERE usuario_id = %s AND estado = 'finalizado'
@@ -207,10 +203,10 @@ async def get_estadisticas_usuario(current_user: dict = Depends(get_current_user
     conn.close()
 
     return {
-        "max_puntaje": float(stats[0]) if stats[0] else None,
-        "min_puntaje": float(stats[1]) if stats[1] else None,
+        "max_puntaje":      float(stats[0]) if stats and stats[0] else None,
+        "min_puntaje":      float(stats[1]) if stats and stats[1] else None,
         "total_simulacros": total_simulacros,
-        "ultimo_puntaje": float(ultimo[0]) if ultimo else None,
+        "ultimo_puntaje":   float(ultimo[0]) if ultimo else None,
     }
 
 
@@ -219,10 +215,12 @@ async def get_temas_debiles_detalle(current_user: dict = Depends(get_current_use
     user_id = current_user["id"]
     conn = get_db_connection()
     cur = conn.cursor()
-    
+
     try:
         cur.execute("""
-            SELECT a.id, a.nombre, COUNT(rd.pregunta_id), COUNT(DISTINCT rd.pregunta_id)
+            SELECT a.id, a.nombre,
+                   COUNT(rd.pregunta_id),
+                   COUNT(DISTINCT rd.pregunta_id)
             FROM resultados_detalle rd
             JOIN simulacros s ON s.id = rd.simulacro_id
             JOIN preguntas p ON p.id = rd.pregunta_id
@@ -233,7 +231,15 @@ async def get_temas_debiles_detalle(current_user: dict = Depends(get_current_use
         """, (user_id,))
 
         rows = cur.fetchall()
-        asignaturas = [{"asignatura_id": r[0], "asignatura_nombre": r[1], "total_errores": r[2], "preguntas_falladas": r[3]} for r in rows]
+        asignaturas = [
+            {
+                "asignatura_id":     r[0],
+                "asignatura_nombre": r[1],
+                "total_errores":     r[2],
+                "preguntas_falladas":r[3],
+            }
+            for r in rows
+        ]
         return {"asignaturas": asignaturas}
     except Exception as e:
         import traceback
@@ -246,11 +252,10 @@ async def get_temas_debiles_detalle(current_user: dict = Depends(get_current_use
 async def get_preguntas_falladas(asignatura_id: int, current_user: dict = Depends(get_current_user)):
     """Obtiene las preguntas falladas de una asignatura."""
     user_id = current_user["id"]
-    
+
     conn = get_db_connection()
     cur = conn.cursor()
 
-    # Optimized: use JOINs instead of subqueries
     cur.execute("""
         SELECT DISTINCT ON (p.id)
             p.id as pregunta_id,
@@ -265,65 +270,71 @@ async def get_preguntas_falladas(asignatura_id: int, current_user: dict = Depend
         JOIN asignaturas a ON a.id = p.asignatura_id
         LEFT JOIN opciones os ON os.id = rd.opcion_seleccionada_id
         LEFT JOIN opciones oc ON oc.pregunta_id = p.id AND oc.es_correcta = TRUE
-        WHERE s.usuario_id = %s 
-            AND p.asignatura_id = %s 
+        WHERE s.usuario_id = %s
+            AND p.asignatura_id = %s
             AND rd.es_correcta = FALSE
         ORDER BY p.id, rd.id
     """, (user_id, asignatura_id))
 
     rows = cur.fetchall()
-    preguntas = []
-    for r in rows:
-        preguntas.append({
-            "pregunta_id": r[0],
-            "enunciado": r[1],
-            "opcion_seleccionada_id": r[2],
-            "opcion_seleccionada": r[3],
-            "opcion_correcta": r[4],
-            "asignatura_nombre": r[5],
-        })
-
     conn.close()
-    return preguntas
+
+    return [
+        {
+            "pregunta_id":           r[0],
+            "enunciado":             r[1],
+            "opcion_seleccionada_id":r[2],
+            "opcion_seleccionada":   r[3],
+            "opcion_correcta":       r[4],
+            "asignatura_nombre":     r[5],
+        }
+        for r in rows
+    ]
 
 
 @router.get("/ultimo-simulacro")
 async def get_ultimo_simulacro(current_user: dict = Depends(get_current_user)):
-    """Obtiene los resultados del último simulacro para el gráfico de pastel."""
+    """Obtiene los resultados del último simulacro para el gráfico del dashboard."""
     user_id = current_user["id"]
-    
+
     conn = get_db_connection()
     cur = conn.cursor()
-    
+
+    # Obtener último simulacro con su total real de preguntas
     cur.execute("""
-        SELECT id FROM simulacros 
+        SELECT id, total_preguntas FROM simulacros
         WHERE usuario_id = %s AND estado = 'finalizado'
         ORDER BY fecha_inicio DESC
         LIMIT 1
     """, (user_id,))
-    
     row = cur.fetchone()
+
     if not row:
+        conn.close()
         return {"total": 0, "buenas": 0, "malas": 0, "no_respondidas": 0}
-    
-    simulacro_id = row[0]
-    
+
+    simulacro_id    = row[0]
+    total_preguntas = row[1] or 0
+
+    # ✅ Blancos = total - aciertos - errores
+    # Las preguntas sin responder NO se insertan en resultados_detalle
     cur.execute("""
-        SELECT 
-            COUNT(*) as total,
-            SUM(CASE WHEN es_correcta = TRUE THEN 1 ELSE 0 END) as buenas,
-            SUM(CASE WHEN es_correcta = FALSE AND opcion_seleccionada_id IS NOT NULL THEN 1 ELSE 0 END) as malas,
-            SUM(CASE WHEN opcion_seleccionada_id IS NULL THEN 1 ELSE 0 END) as no_respondidas
+        SELECT
+            SUM(CASE WHEN es_correcta = TRUE  THEN 1 ELSE 0 END),
+            SUM(CASE WHEN es_correcta = FALSE THEN 1 ELSE 0 END)
         FROM resultados_detalle
         WHERE simulacro_id = %s
     """, (simulacro_id,))
-    
-    row = cur.fetchone()
+    stats = cur.fetchone()
     conn.close()
-    
+
+    buenas         = int(stats[0] or 0)
+    malas          = int(stats[1] or 0)
+    no_respondidas = max(0, total_preguntas - buenas - malas)
+
     return {
-        "total": row[0] or 0,
-        "buenas": row[1] or 0,
-        "malas": row[2] or 0,
-        "no_respondidas": row[3] or 0,
+        "total":          total_preguntas,
+        "buenas":         buenas,
+        "malas":          malas,
+        "no_respondidas": no_respondidas,
     }
