@@ -797,7 +797,7 @@ async def download_resultado_pdf(simulacro_id: int, token: str = None):
     filas = []
     tot_preg = tot_ac = tot_err = tot_bl = tot_pts = 0
     for cfg in configs:
-        asig_id, nombre, num_preg, pts_preg = cfg[0], cfg[1], cfg[3], float(cfg[4] or 1)
+        asig_id, nombre, num_preg, pts_preg = cfg[0], cfg[1], cfg[2], float(cfg[3] or 1)
         res      = res_map.get(asig_id, {'aciertos': 0, 'errores': 0})
         ac       = res['aciertos']
         err      = res['errores']
