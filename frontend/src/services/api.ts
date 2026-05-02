@@ -80,6 +80,7 @@ export const usersAPI = {
 export const simulacrosAPI = {
   getConfig: () => api.get('/simulacros/config'),
   getEspecialidades: () => api.get('/simulacros/especialidades'),
+  getCreditos: () => api.get('/simulacros/creditos'),  // ← agrega esta línea
   iniciar: (data: any) => api.post('/simulacros/iniciar', data),
   iniciarPorEspecialidad: (data: any) => api.post('/simulacros/iniciar-por-especialidad', data),
   getPregunta: (id: number, orden: number) => api.get(`/simulacros/${id}/pregunta/${orden}`),
