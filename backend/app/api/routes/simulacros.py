@@ -880,14 +880,21 @@ async def download_resultado_pdf(simulacro_id: int, token: str = None):
 
     doc = SimpleDocTemplate(
         buf2, pagesize=A4,
-        topMargin=4.2*cm, bottomMargin=1.5*cm,
-        leftMargin=1.5*cm, rightMargin=1.5*cm
+        topMargin=3.8*cm, bottomMargin=1.2*cm,
+        leftMargin=1.2*cm, rightMargin=1.2*cm
     )
 
     elems = []
 
     # ── Bloque de datos del estudiante
-    fecha_str = fecha_simulacro.strftime("%d/%m/%Y %H:%M") if fecha_simulacro else "—"
+    if fecha_simulacro:
+        from datetime import timezone, timedelta
+        tz_peru = timezone(timedelta(hours=-5))
+        if fecha_simulacro.tzinfo is None:
+            fecha_simulacro = fecha_simulacro.replace(tzinfo=timezone.utc)
+        fecha_str = fecha_simulacro.astimezone(tz_peru).strftime("%d/%m/%Y %H:%M")
+    else:
+        fecha_str = "—"
     info_data = [
         ["Estudiante:", nombre_usuario, "Fecha:", fecha_str],
         ["Especialidad:", especialidad, "Simulacro N°:", str(simulacro_id)],
@@ -906,14 +913,14 @@ async def download_resultado_pdf(simulacro_id: int, token: str = None):
         ('BOX', (0,0), (-1,-1), 0.5, colors.HexColor("#cbd5e1")),
     ]))
     elems.append(info_table)
-    elems.append(Spacer(1, 0.5*cm))
+    elems.append(Spacer(1, 0.25*cm))
 
     # ── Tarjetas de resumen (Aciertos / Errores / Blancos / Puntaje)
     resumen_data = [[
-        Paragraph(f'<font size="20" color="#16a34a"><b>{tot_ac}</b></font><br/><font size="8" color="#64748b">ACIERTOS</font>', styles['Normal']),
-        Paragraph(f'<font size="20" color="#dc2626"><b>{tot_err}</b></font><br/><font size="8" color="#64748b">ERRORES</font>', styles['Normal']),
-        Paragraph(f'<font size="20" color="#64748b"><b>{tot_bl}</b></font><br/><font size="8" color="#64748b">BLANCOS</font>', styles['Normal']),
-        Paragraph(f'<font size="20" color="#2563eb"><b>{tot_pts:.2f}</b></font><br/><font size="8" color="#64748b">PUNTAJE</font>', styles['Normal']),
+        Paragraph(f'<font size="16" color="#16a34a"><b>{tot_ac}</b></font><br/><font size="7" color="#64748b">ACIERTOS</font>', styles['Normal']),
+        Paragraph(f'<font size="16" color="#dc2626"><b>{tot_err}</b></font><br/><font size="7" color="#64748b">ERRORES</font>', styles['Normal']),
+        Paragraph(f'<font size="16" color="#64748b"><b>{tot_bl}</b></font><br/><font size="7" color="#64748b">BLANCOS</font>', styles['Normal']),
+        Paragraph(f'<font size="16" color="#2563eb"><b>{tot_pts:.2f}</b></font><br/><font size="7" color="#64748b">PUNTAJE</font>', styles['Normal']),
     ]]
     resumen_table = Table(resumen_data, colWidths=[4.4*cm]*4)
     resumen_table.setStyle(TableStyle([
@@ -927,13 +934,13 @@ async def download_resultado_pdf(simulacro_id: int, token: str = None):
         ('BOX',      (1,0), (1,0), 0.5, colors.HexColor("#fca5a5")),
         ('BOX',      (2,0), (2,0), 0.5, colors.HexColor("#cbd5e1")),
         ('BOX',      (3,0), (3,0), 0.5, colors.HexColor("#93c5fd")),
-        ('TOPPADDING',    (0,0), (-1,-1), 10),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 10),
-        ('LEFTPADDING',   (0,0), (-1,-1), 6),
-        ('RIGHTPADDING',  (0,0), (-1,-1), 6),
+        ('TOPPADDING',    (0,0), (-1,-1), 6),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ('LEFTPADDING',   (0,0), (-1,-1), 4),
+        ('RIGHTPADDING',  (0,0), (-1,-1), 4),
     ]))
     elems.append(resumen_table)
-    elems.append(Spacer(1, 0.5*cm))
+    elems.append(Spacer(1, 0.25*cm))
 
     # ── Título de tabla
     elems.append(Paragraph(
@@ -996,13 +1003,13 @@ async def download_resultado_pdf(simulacro_id: int, token: str = None):
         ('ALIGN',         (0,0), (-1,-1), 'CENTER'),
         ('ALIGN',         (1,0), (1,-1), 'LEFT'),
         ('VALIGN',        (0,0), (-1,-1), 'MIDDLE'),
-        ('TOPPADDING',    (0,0), (-1,-1), 5),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 5),
+        ('TOPPADDING',    (0,0), (-1,-1), 3),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 3),
         ('LEFTPADDING',   (1,0), (1,-1), 4),
     ]
     det_table.setStyle(TableStyle(row_styles))
     elems.append(det_table)
-    elems.append(Spacer(1, 0.4*cm))
+    elems.append(Spacer(1, 0.2*cm))
 
     # ── Penalización nota al pie
     elems.append(Paragraph(
@@ -1041,7 +1048,10 @@ async def download_resultado_pdf(simulacro_id: int, token: str = None):
         # Número de página
         c.setFillColor(BLANCO)
         c.setFont("Helvetica", 8)
-        c.drawCentredString(page_w/2, 0.25*cm, f"Generado el {dt.datetime.now().strftime('%d/%m/%Y %H:%M')}")
+        from datetime import timezone, timedelta
+        tz_peru = timezone(timedelta(hours=-5))
+        now_peru = dt.datetime.now(timezone.utc).astimezone(tz_peru)
+        c.drawCentredString(page_w/2, 0.25*cm, f"Generado el {now_peru.strftime('%d/%m/%Y %H:%M')} (hora Perú)")
 
     doc.build(elems, onFirstPage=draw_background, onLaterPages=draw_background)
 
