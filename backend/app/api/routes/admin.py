@@ -31,6 +31,11 @@ class GrupoAcadUpdate(BaseModel): codigo: str = None; nombre: str = None; descri
 class ConfigPuntajeCreate(BaseModel): grupo_academico_id: int; asignatura_id: int; numero_preguntas: int; puntaje_pregunta: float
 class ConfigPuntajeUpdate(BaseModel): numero_preguntas: int = None; puntaje_pregunta: float = None
 
+# ========== NUEVO: Modelo para actualizar créditos ==========
+class CreditosUpdate(BaseModel):
+    consultas_ia: int = None
+    simulacros: int = None
+
 @router.get("/usuarios")
 def get_usuarios(current_user: dict = Depends(require_role([1]))):
     conn = get_db_connection(); cur = conn.cursor()
@@ -181,27 +186,21 @@ def get_preguntas(estado: str = None, tema_id: int = None, asignatura_id: int = 
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        
         print(f"DEBUG: estado={estado}, tema_id={tema_id}, asignatura_id={asignatura_id}")
-        
-        # Por defecto mostrar aprobadas
         sql = "SELECT p.id, p.tema_id, p.asignatura_id, p.enunciado, p.explicacion, p.imagen_url, p.dificultad, p.tipo_id, p.activa, COALESCE(a.nombre, t.nombre, 'Sin asignar'), COALESCE(tp.nombre, 'Estandar'), a.nombre, p.estado, p.motivo_rechazo, p.usuario_id, NULL, p.universidad, p.an_exam FROM preguntas p LEFT JOIN temas t ON p.tema_id = t.id LEFT JOIN asignaturas a ON p.asignatura_id = a.id LEFT JOIN tipos_pregunta tp ON p.tipo_id = tp.id"
-        
         if estado == 'aprobado':
             sql += " WHERE p.estado = 'aprobado' OR p.estado IS NULL"
         elif estado == 'pendiente':
             sql += " WHERE p.estado = 'pendiente'"
         else:
             sql += " WHERE p.estado = 'aprobado' OR p.estado IS NULL"
-            
         sql += " ORDER BY p.id"
-        
         print(f"DEBUG SQL: {sql[:100]}...")
         cur.execute(sql)
         rows = cur.fetchall()
         conn.close()
-        return [{"id": str(r[0]), "tema_id": r[1], "asignatura_id": r[2], "enunciado": r[3], "explicacion": r[4], "imagen_url": r[5], 
-                "dificultad": r[6], "tipo_id": r[7], "activa": r[8], "tema_nombre": r[9], "tipo_nombre": r[10], 
+        return [{"id": str(r[0]), "tema_id": r[1], "asignatura_id": r[2], "enunciado": r[3], "explicacion": r[4], "imagen_url": r[5],
+                "dificultad": r[6], "tipo_id": r[7], "activa": r[8], "tema_nombre": r[9], "tipo_nombre": r[10],
                 "asignatura_nombre": r[11], "estado": r[12], "motivo_rechazo": r[13], "usuario_id": r[14], "usuario_email": r[15], "universidad": r[16], "an_exam": r[17]} for r in rows]
     except Exception as e:
         print(f"ERROR in get_preguntas: {e}")
@@ -239,30 +238,24 @@ def update_pregunta(pregunta_id: int, data: PreguntaUpdate, current_user: dict =
 
 @router.post("/preguntas/{pregunta_id}/aprobar")
 def aprobar_pregunta(pregunta_id: int, current_user: dict = Depends(require_role([1]))):
-    conn = get_db_connection()
-    cur = conn.cursor()
+    conn = get_db_connection(); cur = conn.cursor()
     cur.execute("UPDATE preguntas SET estado = 'aprobado', motivo_rechazo = NULL WHERE id = %s", (pregunta_id,))
-    conn.commit()
-    conn.close()
+    conn.commit(); conn.close()
     return {"id": pregunta_id, "estado": "aprobado"}
 
 @router.post("/preguntas/{pregunta_id}/rechazar")
 def rechazar_pregunta(pregunta_id: int, motivo: str, current_user: dict = Depends(require_role([1]))):
-    conn = get_db_connection()
-    cur = conn.cursor()
+    conn = get_db_connection(); cur = conn.cursor()
     cur.execute("UPDATE preguntas SET estado = 'rechazado', motivo_rechazo = %s WHERE id = %s", (motivo, pregunta_id))
-    conn.commit()
-    conn.close()
+    conn.commit(); conn.close()
     return {"id": pregunta_id, "estado": "rechazado", "motivo": motivo}
 
 @router.delete("/preguntas/{pregunta_id}")
 def delete_pregunta(pregunta_id: int, current_user: dict = Depends(require_role([1]))):
-    conn = get_db_connection()
-    cur = conn.cursor()
+    conn = get_db_connection(); cur = conn.cursor()
     cur.execute("DELETE FROM opciones WHERE pregunta_id = %s", (pregunta_id,))
     cur.execute("DELETE FROM preguntas WHERE id = %s", (pregunta_id,))
-    conn.commit()
-    conn.close()
+    conn.commit(); conn.close()
     return {"message": "Pregunta eliminada"}
 
 @router.get("/preguntas/{pregunta_id}/opciones")
@@ -477,25 +470,21 @@ def delete_config_puntaje(config_id: int, current_user: dict = Depends(require_r
 
 @router.get("/reportes")
 def get_reportes(current_user: dict = Depends(require_role([1]))):
-    conn = get_db_connection()
-    cur = conn.cursor()
+    conn = get_db_connection(); cur = conn.cursor()
     cur.execute("""SELECT r.id, r.pregunta_id, r.usuario_id, r.motivo, r.estado, r.fecha, p.enunciado, u.email 
                 FROM reportes_preguntas r
                 LEFT JOIN preguntas p ON r.pregunta_id = p.id
                 LEFT JOIN usuarios u ON r.usuario_id = u.id
                 ORDER BY r.fecha DESC""")
-    rows = cur.fetchall()
-    conn.close()
+    rows = cur.fetchall(); conn.close()
     return [{"id": r[0], "pregunta_id": r[1], "usuario_id": r[2], "motivo": r[3], "estado": r[4], "fecha": str(r[5]), "pregunta_enunciado": r[6], "usuario_email": r[7]} for r in rows]
 
 @router.post("/reportes/{reporte_id}/revisar")
 def revisar_reporte(reporte_id: int, resolver: bool, current_user: dict = Depends(require_role([1]))):
-    conn = get_db_connection()
-    cur = conn.cursor()
+    conn = get_db_connection(); cur = conn.cursor()
     nuevo_estado = "resuelto" if resolver else "ignorado"
     cur.execute("UPDATE reportes_preguntas SET estado = %s WHERE id = %s", (nuevo_estado, reporte_id))
-    conn.commit()
-    conn.close()
+    conn.commit(); conn.close()
     return {"id": reporte_id, "estado": nuevo_estado}
 
 
@@ -504,9 +493,7 @@ def revisar_reporte(reporte_id: int, resolver: bool, current_user: dict = Depend
 @router.get("/init-permisos")
 async def init_permisos():
     """Inicializa la tabla de permisos."""
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
+    conn = get_db_connection(); cur = conn.cursor()
     cur.execute("""
         CREATE TABLE IF NOT EXISTS usuario_permisos (
             id SERIAL PRIMARY KEY,
@@ -517,40 +504,42 @@ async def init_permisos():
             UNIQUE(usuario_id, seccion)
         )
     """)
-    
-    conn.commit()
-    conn.close()
+    conn.commit(); conn.close()
     return {"message": "Tabla de permisos creada"}
 
 
 @router.get("/usuarios-permisos")
 async def get_usuarios_permisos(current_user: dict = Depends(require_role([1]))):
-    """Obtiene todos los usuarios con sus permisos."""
+    """Obtiene todos los usuarios con sus permisos y créditos."""
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        
-        # Obtener todos los usuarios
-        cur.execute("SELECT id, nombre_completo, email, rol_id FROM usuarios ORDER BY email")
+        conn = get_db_connection(); cur = conn.cursor()
+
+        # Incluye consultas_ia_disponibles y simulacros_disponibles
+        cur.execute("""
+            SELECT id, nombre_completo, email, rol_id,
+                   COALESCE(consultas_ia_disponibles, 0),
+                   COALESCE(simulacros_disponibles, 0)
+            FROM usuarios ORDER BY email
+        """)
         rows = cur.fetchall()
-        
+
         usuarios = []
         for r in rows:
-            usuario_id = r[0]  # Ya es UUID string
-            
-            # Obtener permisos
+            usuario_id = r[0]
             cur.execute("SELECT seccion, tiene_acceso FROM usuario_permisos WHERE usuario_id = %s", (usuario_id,))
             perms = cur.fetchall()
             permisos = {p[0]: p[1] for p in perms} if perms else {}
-            
+
             usuarios.append({
                 "id": usuario_id,
-                "nombre": r[1] or r[2],  # nombre o email
+                "nombre": r[1] or r[2],
                 "email": r[2],
                 "rol_id": r[3],
+                "consultas_ia_disponibles": r[4],
+                "simulacros_disponibles": r[5],
                 "permisos": [{"seccion": k, "tiene_acceso": v} for k, v in permisos.items()]
             })
-        
+
         conn.close()
         return usuarios
     except Exception as e:
@@ -567,21 +556,16 @@ class PermisoUpdate(BaseModel):
 @router.put("/usuarios-permisos")
 async def update_usuario_permiso(data: PermisoUpdate, current_user: dict = Depends(require_role([1]))):
     """Actualiza el permiso de un usuario para una sección."""
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
+    conn = get_db_connection(); cur = conn.cursor()
     try:
-        usuario_id = data.usuario_id
-        
         cur.execute("""
             INSERT INTO usuario_permisos (usuario_id, seccion, tiene_acceso)
             VALUES (%s, %s, %s)
             ON CONFLICT (usuario_id, seccion)
             DO UPDATE SET tiene_acceso = %s
-        """, (usuario_id, data.seccion, data.tiene_acceso, data.tiene_acceso))
-        
+        """, (data.usuario_id, data.seccion, data.tiene_acceso, data.tiene_acceso))
         conn.commit()
-        return {"usuario_id": usuario_id, "seccion": data.seccion, "tiene_acceso": data.tiene_acceso}
+        return {"usuario_id": data.usuario_id, "seccion": data.seccion, "tiene_acceso": data.tiene_acceso}
     except Exception as e:
         conn.rollback()
         raise e
@@ -589,67 +573,74 @@ async def update_usuario_permiso(data: PermisoUpdate, current_user: dict = Depen
         conn.close()
 
 
+# ========== NUEVO: Endpoint para actualizar créditos ==========
+@router.put("/usuarios/{user_id}/creditos")
+async def update_creditos(user_id: str, data: CreditosUpdate, current_user: dict = Depends(require_role([1]))):
+    """Actualiza los créditos de consultas IA y/o simulacros de un usuario."""
+    conn = get_db_connection(); cur = conn.cursor()
+    updates, values = [], []
+    if data.consultas_ia is not None:
+        updates.append("consultas_ia_disponibles = %s")
+        values.append(data.consultas_ia)
+    if data.simulacros is not None:
+        updates.append("simulacros_disponibles = %s")
+        values.append(data.simulacros)
+    if updates:
+        values.append(user_id)
+        cur.execute(f"UPDATE usuarios SET {', '.join(updates)} WHERE id = %s", values)
+        conn.commit()
+    conn.close()
+    return {"usuario_id": user_id, "updated": True}
+
+
 @router.get("/mis-permisos")
-async def get_mis_permisos(credentials = Depends(http_bearer)):
+async def get_mis_permisos(credentials=Depends(http_bearer)):
     """Obtiene los permisos del usuario actual."""
     from app.core.security import decode_token
     import logging
     logger = logging.getLogger(__name__)
-    
-    logger.info(f"credentials: {credentials}")
-    
+
     if not credentials:
-        return {"dashboard": False, "simulacros": False, "temas_debiles": False, "flashcards": False, "comunidad": False,"admin": False}
-    
+        return {"dashboard": False, "simulacros": False, "temas_debiles": False, "flashcards": False, "comunidad": False, "admin": False}
+
     token = credentials.credentials
-    logger.info(f"token: {token[:20]}...")
-    
     try:
         payload = decode_token(token)
     except Exception as e:
         logger.info(f"decode_token error: {e}")
-        return {"dashboard": False, "simulacros": False, "temas_debiles": False, "flashcards": False, "comunidad": False,"admin": False}
-    
+        return {"dashboard": False, "simulacros": False, "temas_debiles": False, "flashcards": False, "comunidad": False, "admin": False}
+
     user_id = payload.get("sub")
-    logger.info(f"user_id: {user_id}")
-    
     if not user_id:
         return {"dashboard": False, "simulacros": False, "temas_debiles": False, "flashcards": False, "comunidad": False, "admin": False}
-    
+
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        
-        # Get rol_id del usuario
+        conn = get_db_connection(); cur = conn.cursor()
+
         cur.execute("SELECT rol_id FROM usuarios WHERE id = %s", (user_id,))
         user_row = cur.fetchone()
         rol_id = user_row[0] if user_row else 2
-        
-        # Admin (rol_id=1) tiene todos los permisos
+
         if rol_id == 1:
-            return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True, "feynman": True, "comunidad": True,"admin": True}
-        
-        # Get permisos de la DB
+            conn.close()
+            return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True, "feynman": True, "comunidad": True, "admin": True}
+
         cur.execute("SELECT seccion, tiene_acceso FROM usuario_permisos WHERE usuario_id = %s", (user_id,))
         rows = cur.fetchall()
         permisos = {r[0]: r[1] for r in rows}
         conn.close()
-        
+
         if not permisos:
-            # Default para usuarios sin permisos definidos
-            return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True, "feynman": True, "flashcards": True,"admin": False}
-        
-        # Normalizar permisos - asegurar que todas las claves existan
-        normalized = {
+            return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True, "feynman": True, "comunidad": False, "admin": False}
+
+        return {
             "dashboard": permisos.get("dashboard", False),
             "simulacros": permisos.get("simulacros", False),
             "temas_debiles": permisos.get("temas_debiles", False),
             "flashcards": permisos.get("flashcards", False),
             "feynman": permisos.get("feynman", False),
-            "comunidad": permisos.get("comunidad", False), 
+            "comunidad": permisos.get("comunidad", False),
             "admin": permisos.get("admin", False),
         }
-        
-        return normalized
-    except:
-        return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True, "feynman": True,"comunidad": True, "admin": False}
+    except Exception:
+        return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True, "feynman": True, "comunidad": False, "admin": False}
