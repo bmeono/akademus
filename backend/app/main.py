@@ -9,6 +9,8 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print(f"Iniciando {settings.app_name} v{settings.app_version}")
+
+    # ── Verificar conexión a BD ──
     try:
         from psycopg2 import connect
         conn = connect(
@@ -21,6 +23,7 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"Conexión a PostgreSQL: ERROR - {e}")
 
+    # ── Migraciones automáticas ──
     try:
         from psycopg2 import connect
         conn = connect(
@@ -29,16 +32,13 @@ async def lifespan(app: FastAPI):
             database=settings.db_name,
         )
         cur = conn.cursor()
-        try:
-            cur.execute("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS consultas_ia_disponibles INT DEFAULT 10")
-            print("Columna consultas_ia_disponibles creada")
-        except: pass
-        try:
-            cur.execute("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS simulacros_disponibles INT DEFAULT 0")
-            print("Columna simulacros_disponibles creada")
-        except: pass
-        try:
-            cur.execute("""
+
+        migraciones = [
+            ("consultas_ia_disponibles",
+             "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS consultas_ia_disponibles INT DEFAULT 10"),
+            ("simulacros_disponibles",
+             "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS simulacros_disponibles INT DEFAULT 0"),
+            ("comunidad_consultas", """
                 CREATE TABLE IF NOT EXISTS comunidad_consultas (
                     id SERIAL PRIMARY KEY,
                     usuario_id INT REFERENCES usuarios(id),
@@ -47,19 +47,38 @@ async def lifespan(app: FastAPI):
                     respuesta TEXT,
                     fecha_consulta TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
-            """)
-            print("Tabla comunidad_consultas creada")
-        except: pass
+            """),
+            ("publicidad", """
+                CREATE TABLE IF NOT EXISTS publicidad (
+                    id SERIAL PRIMARY KEY,
+                    imagen_url TEXT NOT NULL,
+                    enlace_url TEXT,
+                    descripcion VARCHAR(200),
+                    orden INTEGER DEFAULT 0,
+                    activa BOOLEAN DEFAULT TRUE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """),
+        ]
+
+        for nombre, sql in migraciones:
+            try:
+                cur.execute(sql)
+                print(f"Migración OK: {nombre}")
+            except Exception as e:
+                print(f"Migración skip ({nombre}): {e}")
+
         conn.commit()
         conn.close()
     except Exception as e:
-        print(f"Migracion error: {e}")
+        print(f"Error en migraciones: {e}")
 
     yield
 
     from app.core.db import close_pool
     close_pool()
     print("Cerrando aplicación - pool de conexiones cerrado")
+
 
 app = FastAPI(
     title=settings.app_name,
@@ -90,6 +109,7 @@ app.include_router(feynman.admin_router)
 app.include_router(dashboard.router)
 app.include_router(admin.router)
 app.include_router(comunidad.router)
+app.include_router(admin.publicidad_router)   # ← endpoint público /publicidad
 
 @app.get("/")
 async def root():
