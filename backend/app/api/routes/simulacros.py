@@ -82,19 +82,29 @@ async def iniciar_simulacro_especialidad(
     conn = get_db_connection()
     cur = conn.cursor()
 
-    # ✅ Si ya hay un simulacro en curso, devolver ese (no crear uno nuevo)
+    # ✅ Si hay un simulacro en curso para LA MISMA especialidad, devolver ese
     cur.execute(
-        "SELECT id, total_preguntas, duracion_segundos FROM simulacros WHERE usuario_id = %s AND estado = 'en_curso'",
+        "SELECT id, total_preguntas, duracion_segundos, especialidad_id FROM simulacros WHERE usuario_id = %s AND estado = 'en_curso'",
         (user_id,)
     )
     en_curso = cur.fetchone()
     if en_curso:
-        conn.close()
-        return SimulacroStartResponse(
-            simulacro_id=en_curso[0],
-            total_preguntas=en_curso[1],
-            duracion_segundos=en_curso[2],
-        )
+        if en_curso[3] == config.especialidad_id:
+            # Misma especialidad → continuar simulacro existente
+            conn.close()
+            return SimulacroStartResponse(
+                simulacro_id=en_curso[0],
+                total_preguntas=en_curso[1],
+                duracion_segundos=en_curso[2],
+            )
+        else:
+            # Diferente especialidad → finalizar el anterior sin descontar crédito
+            cur.execute(
+                "UPDATE simulacros SET estado = 'finalizado', puntaje_total = 0 WHERE id = %s",
+                (en_curso[0],)
+            )
+            conn.commit()
+            # Continúa para crear el nuevo simulacro
 
     # Verificar créditos disponibles
     cur.execute("SELECT simulacros_disponibles FROM usuarios WHERE id = %s", (user_id,))
