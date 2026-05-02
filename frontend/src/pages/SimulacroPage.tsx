@@ -11,6 +11,7 @@ export default function SimulacroPage() {
   const [selectedEspecialidad, setSelectedEspecialidad] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [simulacrosDisponibles, setSimulacrosDisponibles] = useState<number | null>(null);
 
   useEffect(() => {
     if (permisos && permisos.simulacros === false) {
@@ -18,6 +19,9 @@ export default function SimulacroPage() {
       return;
     }
     simulacrosAPI.getEspecialidades().then(r => setEspecialidades(r.data));
+
+    // Cargar créditos disponibles
+    simulacrosAPI.getCreditos().then(r => setSimulacrosDisponibles(r.data.simulacros_disponibles)).catch(() => {});
   }, [permisos]);
 
   const iniciarSimulacro = async () => {
@@ -30,14 +34,19 @@ export default function SimulacroPage() {
       });
       navigate(`/simulacros/${data.simulacro_id}`);
     } catch (e: any) {
-      console.error(e);
+      const status = e.response?.status;
       const detail = e.response?.data?.detail;
-      const errorMsg = typeof detail === 'string' ? detail : 'Error al iniciar simulacro';
-      setError(errorMsg);
+      if (status === 403) {
+        setError('No tienes simulacros disponibles. Contacta al administrador para recargar tu cuenta.');
+      } else {
+        setError(typeof detail === 'string' ? detail : 'Error al iniciar simulacro. Intenta de nuevo.');
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  const sinCreditos = simulacrosDisponibles !== null && simulacrosDisponibles <= 0;
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
@@ -45,6 +54,21 @@ export default function SimulacroPage() {
         <h1 className="text-3xl font-display font-bold text-slate-900">Nuevo Simulacro</h1>
         <p className="text-slate-500">Selecciona tu especialidad para comenzar</p>
       </div>
+
+      {/* Créditos disponibles */}
+      {simulacrosDisponibles !== null && (
+        <div className={`p-3 rounded-lg text-sm font-medium flex items-center gap-2 ${
+          sinCreditos
+            ? 'bg-red-50 text-red-700 border border-red-200'
+            : 'bg-green-50 text-green-700 border border-green-200'
+        }`}>
+          <span>{sinCreditos ? '⚠️' : '✓'}</span>
+          {sinCreditos
+            ? 'No tienes simulacros disponibles. Contacta al administrador.'
+            : `Tienes ${simulacrosDisponibles} simulacro${simulacrosDisponibles !== 1 ? 's' : ''} disponible${simulacrosDisponibles !== 1 ? 's' : ''}.`
+          }
+        </div>
+      )}
 
       <Card>
         <div className="space-y-6">
@@ -54,6 +78,7 @@ export default function SimulacroPage() {
               value={selectedEspecialidad || ''}
               onChange={(e) => setSelectedEspecialidad(Number(e.target.value) || null)}
               className="select w-full"
+              disabled={sinCreditos}
             >
               <option value="">-- Selecciona una especialidad --</option>
               {especialidades.map((esp: any) => (
@@ -80,17 +105,17 @@ export default function SimulacroPage() {
           )}
 
           {error && (
-            <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm">
-              {error}
+            <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm border border-red-200">
+              ⚠️ {error}
             </div>
           )}
 
           <button
             onClick={iniciarSimulacro}
-            disabled={!selectedEspecialidad || loading}
+            disabled={!selectedEspecialidad || loading || sinCreditos}
             className="btn btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Cargando...' : 'Iniciar Simulacro'}
+            {loading ? 'Cargando simulacro...' : sinCreditos ? 'Sin simulacros disponibles' : 'Iniciar Simulacro'}
           </button>
         </div>
       </Card>
@@ -112,7 +137,7 @@ export default function SimulacroPage() {
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary-600">⏱</span>
-            Tiempo máximo: 120 minutos
+            Tiempo máximo: 180 minutos
           </li>
         </ul>
       </Card>
