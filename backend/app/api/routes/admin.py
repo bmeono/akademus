@@ -644,3 +644,92 @@ async def get_mis_permisos(credentials=Depends(http_bearer)):
         }
     except Exception:
         return {"dashboard": True, "simulacros": True, "temas_debiles": True, "flashcards": True, "feynman": True, "comunidad": False, "admin": False}
+
+# ========== PUBLICIDAD ==========
+
+class PublicidadCreate(BaseModel):
+    imagen_url: str
+    enlace_url: str = None
+    descripcion: str = None
+    orden: int = 0
+
+class PublicidadUpdate(BaseModel):
+    imagen_url: str = None
+    enlace_url: str = None
+    descripcion: str = None
+    orden: int = None
+    activa: bool = None
+
+@router.get("/publicidad")
+async def get_publicidad_admin(current_user: dict = Depends(require_role([1]))):
+    """Lista todas las imágenes de publicidad (admin)."""
+    conn = get_db_connection(); cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS publicidad (
+            id SERIAL PRIMARY KEY,
+            imagen_url TEXT NOT NULL,
+            enlace_url TEXT,
+            descripcion VARCHAR(200),
+            orden INTEGER DEFAULT 0,
+            activa BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.commit()
+    cur.execute("SELECT id, imagen_url, enlace_url, descripcion, orden, activa FROM publicidad ORDER BY orden, id")
+    rows = cur.fetchall(); conn.close()
+    return [{"id": r[0], "imagen_url": r[1], "enlace_url": r[2], "descripcion": r[3], "orden": r[4], "activa": r[5]} for r in rows]
+
+@router.post("/publicidad")
+async def create_publicidad(data: PublicidadCreate, current_user: dict = Depends(require_role([1]))):
+    """Agrega una imagen de publicidad."""
+    conn = get_db_connection(); cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO publicidad (imagen_url, enlace_url, descripcion, orden)
+        VALUES (%s, %s, %s, %s) RETURNING id
+    """, (data.imagen_url, data.enlace_url, data.descripcion, data.orden))
+    pub_id = cur.fetchone()[0]; conn.commit(); conn.close()
+    return {"id": pub_id, "imagen_url": data.imagen_url}
+
+@router.put("/publicidad/{pub_id}")
+async def update_publicidad(pub_id: int, data: PublicidadUpdate, current_user: dict = Depends(require_role([1]))):
+    """Actualiza imagen de publicidad."""
+    conn = get_db_connection(); cur = conn.cursor()
+    updates, values = [], []
+    if data.imagen_url is not None: updates.append("imagen_url = %s"); values.append(data.imagen_url)
+    if data.enlace_url is not None: updates.append("enlace_url = %s"); values.append(data.enlace_url)
+    if data.descripcion is not None: updates.append("descripcion = %s"); values.append(data.descripcion)
+    if data.orden is not None: updates.append("orden = %s"); values.append(data.orden)
+    if data.activa is not None: updates.append("activa = %s"); values.append(data.activa)
+    if updates:
+        values.append(pub_id)
+        cur.execute(f"UPDATE publicidad SET {', '.join(updates)} WHERE id = %s", values)
+        conn.commit()
+    conn.close()
+    return {"id": pub_id}
+
+@router.delete("/publicidad/{pub_id}")
+async def delete_publicidad(pub_id: int, current_user: dict = Depends(require_role([1]))):
+    """Elimina imagen de publicidad."""
+    conn = get_db_connection(); cur = conn.cursor()
+    cur.execute("DELETE FROM publicidad WHERE id = %s", (pub_id,))
+    conn.commit(); conn.close()
+    return {"message": "Eliminado"}
+
+# Endpoint público para que el dashboard cargue las imágenes
+from fastapi import APIRouter as _AR
+publicidad_router = _AR(prefix="/publicidad", tags=["Publicidad"])
+
+@publicidad_router.get("")
+async def get_publicidad_activa():
+    """Retorna imágenes de publicidad activas (público)."""
+    try:
+        conn = get_db_connection(); cur = conn.cursor()
+        cur.execute("""
+            SELECT id, imagen_url, enlace_url, descripcion
+            FROM publicidad WHERE activa = TRUE ORDER BY orden, id
+        """)
+        rows = cur.fetchall(); conn.close()
+        return [{"id": r[0], "imagen_url": r[1], "enlace_url": r[2], "descripcion": r[3]} for r in rows]
+    except Exception:
+        return []
