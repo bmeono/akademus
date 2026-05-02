@@ -1250,7 +1250,7 @@ export default function AdminPage() {
           }
           return valorOriginal;
         };
-        
+
         const togglePermisoEditando = (usuarioId: string, seccion: string, valorOriginal: boolean) => {
           setPermisosEditando(prev => ({
             ...prev,
@@ -1260,31 +1260,34 @@ export default function AdminPage() {
             }
           }));
         };
-        
+
         const guardarPermisos = async (usuarioId: string) => {
           const cambios = permisosEditando[usuarioId];
           if (!cambios) return;
-          
           for (const [seccion, tieneAcceso] of Object.entries(cambios)) {
-            await adminAPI.updatePermiso({
-              usuario_id: usuarioId,
-              seccion: seccion,
-              tiene_acceso: tieneAcceso
-            });
+            await adminAPI.updatePermiso({ usuario_id: usuarioId, seccion, tiene_acceso: tieneAcceso });
           }
-          
           setPermisosEditando(prev => {
             const newState = { ...prev };
             delete newState[usuarioId];
             return newState;
           });
-          
           loadData();
         };
-        
+
+        const guardarCreditos = async (usuarioId: string, tipo: 'ia' | 'sim', valor: number) => {
+          try {
+            await api.put('/admin/usuarios/' + usuarioId + '/creditos',
+              tipo === 'ia' ? { consultas_ia: valor } : { simulacros: valor }
+            );
+            alert('Créditos actualizados');
+            loadData();
+          } catch { alert('Error al actualizar créditos'); }
+        };
+
         return (
           <div className="space-y-4">
-            <p className="text-slate-600">Administra los permisos de acceso de cada usuario.</p>
+            <p className="text-slate-600">Administra los permisos de acceso y créditos de cada usuario.</p>
             {usuarios.map(u => {
               const tieneCambios = permisosEditando[u.id] && Object.keys(permisosEditando[u.id]).length > 0;
               return (
@@ -1297,16 +1300,14 @@ export default function AdminPage() {
                     <button
                       onClick={() => guardarPermisos(u.id)}
                       disabled={!tieneCambios}
-                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                        tieneCambios 
-                          ? 'bg-primary-600 text-white hover:bg-primary-700' 
-                          : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                      }`}
+                      className={"px-4 py-2 rounded-lg font-medium transition-colors " + (tieneCambios ? 'bg-primary-600 text-white hover:bg-primary-700' : 'bg-slate-200 text-slate-400 cursor-not-allowed')}
                     >
-                      Actualizar
+                      Guardar permisos
                     </button>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+
+                  {/* Checkboxes de secciones */}
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
                     {['dashboard', 'simulacros', 'temas_debiles', 'flashcards', 'comunidad'].map(seccion => {
                       const perm = (u.permisos || []).find((p: any) => p.seccion === seccion);
                       const valorOriginal = perm?.tiene_acceso !== false;
@@ -1319,10 +1320,58 @@ export default function AdminPage() {
                             onChange={() => togglePermisoEditando(u.id, seccion, valorOriginal)}
                             className="w-4 h-4 rounded text-primary-600"
                           />
-                          <span className="text-sm capitalize">{seccion.replace('_', ' ')}</span>
+                          <span className="text-sm capitalize">{seccion.replace(/_/g, ' ')}</span>
                         </label>
                       );
                     })}
+                  </div>
+
+                  {/* Créditos */}
+                  <div className="border-t pt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 block mb-1">
+                        Créditos IA (actual: {u.consultas_ia_disponibles ?? 0})
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="number" min="0"
+                          defaultValue={u.consultas_ia_disponibles ?? 0}
+                          id={"ia-" + u.id}
+                          className="flex-1 p-2 border rounded text-sm"
+                        />
+                        <button
+                          onClick={() => {
+                            const val = parseInt((document.getElementById("ia-" + u.id) as HTMLInputElement).value);
+                            guardarCreditos(u.id, 'ia', val);
+                          }}
+                          className="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                        >
+                          Guardar
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 block mb-1">
+                        Simulacros disponibles (actual: {u.simulacros_disponibles ?? 0})
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="number" min="0"
+                          defaultValue={u.simulacros_disponibles ?? 0}
+                          id={"sim-" + u.id}
+                          className="flex-1 p-2 border rounded text-sm"
+                        />
+                        <button
+                          onClick={() => {
+                            const val = parseInt((document.getElementById("sim-" + u.id) as HTMLInputElement).value);
+                            guardarCreditos(u.id, 'sim', val);
+                          }}
+                          className="px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                        >
+                          Guardar
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </Card>
               );
