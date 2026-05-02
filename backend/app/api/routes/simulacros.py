@@ -26,16 +26,13 @@ async def get_config(current_user: dict = Depends(get_current_user)):
     conn = get_db_connection()
     cur = conn.cursor()
 
-    # Cursos disponibles
     cur.execute("SELECT id, nombre FROM cursos ORDER BY orden")
     cursos = [{"id": r[0], "nombre": r[1]} for r in cur.fetchall()]
 
-    # Temas por curso
     cur.execute("SELECT id, nombre, curso_id FROM temas ORDER BY curso_id, nombre")
     temas = [{"id": r[0], "nombre": r[1], "curso_id": r[2]} for r in cur.fetchall()]
 
     conn.close()
-
     return {"cursos": cursos, "temas": temas}
 
 
@@ -44,7 +41,7 @@ async def get_especialidades(current_user: dict = Depends(get_current_user)):
     """Obtiene lista de especialidades para selector."""
     conn = get_db_connection()
     cur = conn.cursor()
-    
+
     cur.execute("""
         SELECT e.id, e.nombre, e.grupo_academico_id, g.nombre as grupo_nombre
         FROM especialidades e 
@@ -52,12 +49,24 @@ async def get_especialidades(current_user: dict = Depends(get_current_user)):
         ORDER BY g.orden, e.codigo
     """)
     especialidades = [
-        {"id": r[0], "nombre": r[1], "grupo_id": r[2], "grupo_nombre": r[3]} 
+        {"id": r[0], "nombre": r[1], "grupo_id": r[2], "grupo_nombre": r[3]}
         for r in cur.fetchall()
     ]
-    
+
     conn.close()
     return especialidades
+
+
+@router.get("/creditos")
+async def get_creditos_simulacro(current_user: dict = Depends(get_current_user)):
+    """Obtiene los simulacros disponibles del usuario."""
+    user_id = current_user["id"]
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT simulacros_disponibles FROM usuarios WHERE id = %s", (user_id,))
+    row = cur.fetchone()
+    conn.close()
+    return {"simulacros_disponibles": row[0] if row and row[0] is not None else 0}
 
 
 @router.post("/iniciar-por-especialidad")
@@ -66,13 +75,19 @@ async def iniciar_simulacro_especialidad(
 ):
     """Inicia simulacro basado en especialidad seleccionada."""
     user_id = current_user["id"]
-    
+
     if not config.especialidad_id:
         raise HTTPException(status_code=400, detail="Se requiere seleccionar una especialidad")
-    
+
+    # Verificar simulacros disponibles
     conn = get_db_connection()
     cur = conn.cursor()
-    
+    cur.execute("SELECT simulacros_disponibles FROM usuarios WHERE id = %s", (user_id,))
+    row = cur.fetchone()
+    if not row or (row[0] is not None and row[0] <= 0):
+        conn.close()
+        raise HTTPException(status_code=403, detail="Sin simulacros disponibles. Contacta al administrador.")
+
     # Obtener grupo académico de la especialidad
     cur.execute("""
         SELECT grupo_academico_id FROM especialidades WHERE id = %s
@@ -81,9 +96,9 @@ async def iniciar_simulacro_especialidad(
     if not result:
         conn.close()
         raise HTTPException(status_code=404, detail="Especialidad no encontrada")
-    
+
     grupo_id = result[0]
-    
+
     # Obtener configuración de puntaje del grupo
     cur.execute("""
         SELECT cp.asignatura_id, cp.numero_preguntas, cp.puntaje_pregunta, a.nombre
@@ -93,17 +108,17 @@ async def iniciar_simulacro_especialidad(
         ORDER BY a.orden
     """, (grupo_id,))
     config_puntaje = cur.fetchall()
-    
+
     if not config_puntaje:
         conn.close()
         raise HTTPException(status_code=400, detail="No hay configuración de puntaje para este grupo")
-    
+
     total_preguntas = sum(row[1] for row in config_puntaje)
-    
+
     # Seleccionar preguntas aleatorias por asignatura según distribución
     preguntas_seleccionadas = []
     puntajes_por_pregunta = {}
-    
+
     for asignatura_id, num_preguntas, puntaje, _ in config_puntaje:
         cur.execute("""
             SELECT id FROM preguntas 
@@ -112,19 +127,19 @@ async def iniciar_simulacro_especialidad(
             LIMIT %s
         """, (asignatura_id, num_preguntas))
         preguntas = [r[0] for r in cur.fetchall()]
-        
+
         if len(preguntas) < num_preguntas:
             conn.close()
             raise HTTPException(
-                status_code=400, 
+                status_code=400,
                 detail=f"No hay suficientes preguntas para {puntaje}. Necesarias: {num_preguntas}, Disponibles: {len(preguntas)}"
             )
-        
+
         for p in preguntas:
             preguntas_seleccionadas.append(p)
             puntajes_por_pregunta[p] = puntaje
-    
-    # Crear simulacro (100 preguntas, 180 minutos)
+
+    # Crear simulacro (180 minutos)
     duracion_segundos = 180 * 60
     cur.execute("""
         INSERT INTO simulacros (usuario_id, duracion_segundos, total_preguntas, estado, grupo_academico_id, especialidad_id)
@@ -132,7 +147,7 @@ async def iniciar_simulacro_especialidad(
         RETURNING id
     """, (user_id, duracion_segundos, total_preguntas, grupo_id, config.especialidad_id))
     simulacro_id = cur.fetchone()[0]
-    
+
     # Guardar preguntas del simulacro con su puntaje
     for i, pregunta_id in enumerate(preguntas_seleccionadas):
         puntaje = puntajes_por_pregunta[pregunta_id]
@@ -140,15 +155,23 @@ async def iniciar_simulacro_especialidad(
             INSERT INTO respuestas_simulacro (simulacro_id, pregunta_id, orden, puntaje_pregunta)
             VALUES (%s, %s, %s, %s)
         """, (simulacro_id, pregunta_id, i + 1, puntaje))
-    
+
+    # Descontar simulacro disponible
+    cur.execute(
+        "UPDATE usuarios SET simulacros_disponibles = simulacros_disponibles - 1 WHERE id = %s",
+        (user_id,)
+    )
+
     conn.commit()
     conn.close()
-    
+
     return SimulacroStartResponse(
         simulacro_id=simulacro_id,
         total_preguntas=total_preguntas,
         duracion_segundos=duracion_segundos,
     )
+
+
 async def iniciar_simulacro(
     config: SimulacroConfig, current_user: dict = Depends(get_current_user)
 ):
@@ -158,7 +181,6 @@ async def iniciar_simulacro(
     conn = get_db_connection()
     cur = conn.cursor()
 
-    # Construye query de preguntas
     if config.tema_ids:
         placeholders = ",".join(["%s"] * len(config.tema_ids))
         cur.execute(
@@ -189,7 +211,6 @@ async def iniciar_simulacro(
         conn.close()
         raise HTTPException(status_code=400, detail="No hay suficientes preguntas")
 
-    # Crea simulacro
     duracion_segundos = config.duracion_minutos * 60
     cur.execute(
         """
@@ -201,7 +222,6 @@ async def iniciar_simulacro(
     )
     simulacro_id = cur.fetchone()[0]
 
-    # Guarda preguntas del simulacro
     for i, pregunta_id in enumerate(preguntas):
         cur.execute(
             """
@@ -231,7 +251,6 @@ async def get_pregunta(
     conn = get_db_connection()
     cur = conn.cursor()
 
-    # Verifica simulacro pertenece al usuario
     cur.execute(
         """
         SELECT s.id FROM simulacros s 
@@ -243,7 +262,6 @@ async def get_pregunta(
         conn.close()
         raise HTTPException(status_code=404, detail="Simulacro no encontrado")
 
-    # Obtiene pregunta
     cur.execute(
         """
         SELECT p.id, p.tema_id, p.enunciado, p.explicacion, p.imagen_url, p.dificultad, p.universidad, p.an_exam
@@ -259,7 +277,6 @@ async def get_pregunta(
         conn.close()
         raise HTTPException(status_code=404, detail="Pregunta no encontrada")
 
-    # Obtiene opciones
     cur.execute(
         """
         SELECT id, pregunta_id, texto FROM opciones 
@@ -311,7 +328,6 @@ async def get_todas_preguntas(
 
     duracion_segundos = simulacro[1]
 
-    # Calcula tiempo restante
     fecha_inicio = simulacro[2]
     if fecha_inicio:
         import datetime
@@ -321,7 +337,6 @@ async def get_todas_preguntas(
     else:
         tiempo_restante = duracion_segundos
 
-    # Obtiene todas las preguntas
     cur.execute("""
         SELECT p.id, p.enunciado, p.explicacion, p.imagen_url, p.dificultad, r.orden, r.puntaje_pregunta, p.universidad, p.an_exam
         FROM preguntas p
@@ -331,7 +346,6 @@ async def get_todas_preguntas(
     """, (simulacro_id,))
     preguntas_raw = cur.fetchall()
 
-    # Obtiene opciones para todas las preguntas
     pregunta_ids = [p[0] for p in preguntas_raw]
     opciones_map = {}
     if pregunta_ids:
@@ -387,7 +401,6 @@ async def responder_pregunta(
     conn = get_db_connection()
     cur = conn.cursor()
 
-    # Verifica simulacro
     cur.execute(
         """
         SELECT s.id, s.total_preguntas, s.fecha_inicio, s.duracion_segundos
@@ -402,7 +415,6 @@ async def responder_pregunta(
         conn.close()
         raise HTTPException(status_code=404, detail="Simulacro no encontrado")
 
-    # Verifica tiempo
     tiempo_transcurrido = (datetime.utcnow() - simulacro[2]).total_seconds()
     if tiempo_transcurrido > simulacro[3]:
         cur.execute(
@@ -412,7 +424,6 @@ async def responder_pregunta(
         conn.close()
         raise HTTPException(status_code=400, detail="Tiempo agotado")
 
-    # Verifica opción correcta
     cur.execute(
         "SELECT es_correcta FROM opciones WHERE id = %s", (data.opcion_seleccionada_id,)
     )
@@ -424,7 +435,6 @@ async def responder_pregunta(
 
     es_correcta = opcion[0]
 
-    # Actualiza respuesta
     cur.execute(
         """
         UPDATE respuestas_simulacro 
@@ -440,7 +450,6 @@ async def responder_pregunta(
         ),
     )
 
-    # Obtiene siguiente pregunta
     cur.execute(
         """
         SELECT COUNT(*) FROM respuestas_simulacro 
@@ -449,7 +458,6 @@ async def responder_pregunta(
         (simulacro_id,),
     )
     respondidas = cur.fetchone()[0]
-
     siguiente_orden = respondidas + 1
 
     if siguiente_orden <= simulacro[1]:
@@ -477,7 +485,7 @@ async def responder_pregunta(
                 pregunta=PreguntaResponse(
                     id=sig_pregunta[0],
                     tema_id=sig_pregunta[1],
-                    enunciado=sig_preunta[2],
+                    enunciado=sig_pregunta[2],
                     explicacion=sig_pregunta[3],
                     imagen_url=sig_pregunta[4],
                     dificultad=sig_pregunta[5],
@@ -494,7 +502,6 @@ async def responder_pregunta(
     conn.commit()
     conn.close()
 
-    # Obtiene explicación si falló
     explicacion = None if es_correcta else data.get("explicacion")
 
     return RespuestaResultResponse(
@@ -503,7 +510,7 @@ async def responder_pregunta(
 
 
 class RespuestasFin(BaseModel):
-    respuestas: List[dict]  # [{pregunta_id, opcion_seleccionada_id}]
+    respuestas: List[dict]
 
 
 class RespuestasRequest(BaseModel):
@@ -520,22 +527,19 @@ async def finalizar_simulacro(
     try:
         respuestas = body.get('respuestas', [])
         user_id = current_user["id"]
-        
+
         conn = get_db_connection()
         cur = conn.cursor()
-        
-        # Limpiar resultados anteriores
+
         cur.execute("DELETE FROM resultados_detalle WHERE simulacro_id = %s", (simulacro_id,))
-        
-        # Obtener preguntas del simulacro
+
         cur.execute("""
             SELECT rs.pregunta_id, rs.puntaje_pregunta 
             FROM respuestas_simulacro rs 
             WHERE rs.simulacro_id = %s ORDER BY rs.orden
         """, (simulacro_id,))
         preguntas = cur.fetchall()
-        
-        # Fetch all correct options at once (optimization)
+
         pregunta_ids = [p[0] for p in preguntas]
         opciones_correctas = {}
         if pregunta_ids:
@@ -545,28 +549,27 @@ async def finalizar_simulacro(
             """, (tuple(pregunta_ids),))
             for p_id, opt_id in cur.fetchall():
                 opciones_correctas[p_id] = opt_id
-        
+
         aciertos = 0
         errores = 0
         sin_responder = 0
         puntaje_total = 0.0
-        
-        # Procesar cada pregunta
+
         for pregunta_id, puntaje in preguntas:
             puntaje_float = float(puntaje) if puntaje else 0.0
-            
+
             opcion_seleccionada_id = None
             for r in respuestas:
                 if str(r.get('pregunta_id')) == str(pregunta_id):
                     opcion_seleccionada_id = r.get('opcion_seleccionada_id')
                     break
-            
+
             opcion_correcta_id = opciones_correctas.get(pregunta_id)
-            
-            es_correcta = None  # None = no respondida, True = correcta, False = incorrecta
+
+            es_correcta = None
             if opcion_seleccionada_id is None:
                 sin_responder += 1
-                es_correcta = None  # No respondida
+                es_correcta = None
             elif opcion_correcta_id and opcion_seleccionada_id == opcion_correcta_id:
                 aciertos += 1
                 puntaje_total += puntaje_float
@@ -575,34 +578,29 @@ async def finalizar_simulacro(
                 errores += 1
                 puntaje_total -= 1.125
                 es_correcta = False
-            
-            # Solo guardar si respondio (no guardar si no respondio)
+
             if es_correcta is not None:
                 cur.execute("""
                     INSERT INTO resultados_detalle (simulacro_id, pregunta_id, opcion_seleccionada_id, es_correcta)
                     VALUES (%s, %s, %s, %s)
                 """, (simulacro_id, pregunta_id, opcion_seleccionada_id, es_correcta))
-        
-        # Redondear a 2 decimales
+
         puntaje_total = round(puntaje_total, 2)
-        
-        # Actualizar simulacro
+
         cur.execute("""
             UPDATE simulacros SET puntaje_total = %s, estado = 'finalizado' 
             WHERE id = %s
         """, (float(puntaje_total), simulacro_id))
-        
-        # Actualizar max/min puntaje del usuario
+
         cur.execute("""
             UPDATE usuarios SET 
                 max_puntaje = GREATEST(COALESCE(max_puntaje, 0), %s),
                 min_puntaje = LEAST(COALESCE(min_puntaje, 999999), %s)
             WHERE id = %s
         """, (float(puntaje_total), float(puntaje_total), user_id))
-        
+
         conn.commit()
 
-        # Crear flashcards de las preguntas falladas
         for pregunta_id, puntaje in preguntas:
             es_fallo = True
             for r in respuestas:
@@ -613,7 +611,7 @@ async def finalizar_simulacro(
                     if opcion_correcta and opcion_seleccionada_id == opcion_correcta[0]:
                         es_fallo = False
                     break
-            
+
             if es_fallo:
                 cur.execute("""
                     INSERT INTO flashcards (usuario_id, pregunta_id, facilidad, intervalo, repeticiones, proxima_revision)
@@ -625,7 +623,7 @@ async def finalizar_simulacro(
 
         conn.commit()
         conn.close()
-        
+
         return {
             "id": simulacro_id,
             "puntaje_total": float(puntaje_total),
@@ -674,7 +672,6 @@ async def get_resultado(simulacro_id: int, current_user: dict = Depends(get_curr
     conn = get_db_connection()
     cur = conn.cursor()
 
-    # Obtiene resultado desde la tabla simulacros
     cur.execute("""
         SELECT 
             COALESCE(puntaje_total, 0) as puntaje_total,
@@ -682,14 +679,13 @@ async def get_resultado(simulacro_id: int, current_user: dict = Depends(get_curr
         FROM simulacros
         WHERE id = %s AND estado = 'finalizado'
     """, (simulacro_id,))
-    
+
     resultado = cur.fetchone()
-    
+
     if not resultado:
         conn.close()
         raise HTTPException(status_code=404, detail="Resultado no encontrado")
 
-    # Obtener stats desde resultados_detalle
     cur.execute("""
         SELECT 
             COUNT(*) as total,
@@ -700,7 +696,7 @@ async def get_resultado(simulacro_id: int, current_user: dict = Depends(get_curr
         WHERE simulacro_id = %s
     """, (simulacro_id,))
     stats = cur.fetchone()
-    
+
     return {
         "id": simulacro_id,
         "total_preguntas": stats[0] or 0,
@@ -713,45 +709,36 @@ async def get_resultado(simulacro_id: int, current_user: dict = Depends(get_curr
 
 @router.get("/{simulacro_id}/resultado-pdf")
 async def download_resultado_pdf(simulacro_id: int, token: str = None):
-    """
-    Genera PDF con los resultados del simulacro.
-    Acepta token como query parameter.
-    """
+    """Genera PDF con los resultados del simulacro."""
     from fastapi.security import HTTPBearer
     from app.core.security import decode_token
-    
-    # Si viene token en query, usarlo
+
     if not token:
         raise HTTPException(status_code=401, detail="Token requerido")
-    
+
     try:
         payload = decode_token(token)
     except Exception as e:
         raise HTTPException(status_code=401, detail=f"Token inválido: {e}")
-    
+
     user_id = payload.get("sub")
     if not user_id:
         raise HTTPException(status_code=401, detail="Token sin usuario")
+
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import letter
-    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib.units import inch
-    from reportlab.pdfbase import pdfmetrics
-    from reportlab.pdfbase.ttfonts import TTFont
     from io import BytesIO
-    
-    # user_id viene del token ya decodificado arriba
-    
+
     conn = get_db_connection()
     cur = conn.cursor()
-    
-    # Obtener datos del usuario
+
     cur.execute("SELECT nombre_completo FROM usuarios WHERE id = %s", (user_id,))
     user_row = cur.fetchone()
     nombre_usuario = user_row[0] if user_row and user_row[0] else "Usuario"
-    
-    # Obtener datos del simulacro
+
     cur.execute("""
         SELECT s.especialidad_id, e.nombre, s.estado, s.puntaje_total, s.fecha_inicio
         FROM simulacros s
@@ -762,17 +749,15 @@ async def download_resultado_pdf(simulacro_id: int, token: str = None):
     if not sim_row:
         conn.close()
         raise HTTPException(status_code=404, detail="Simulacro no encontrado")
-    
+
     especialidad = sim_row[1] or "General"
-    
-    # Obtener el grupo académico de la especialidad
+
     cur.execute("""
         SELECT grupo_academico_id FROM especialidades WHERE id = %s
     """, (sim_row[0],))
     grupo_row = cur.fetchone()
     grupo_id = grupo_row[0] if grupo_row else None
-    
-    # Obtener TODAS las configuraciones de puntaje del grupo (para mostrar todas las asignaturas)
+
     cur.execute("""
         SELECT a.id, a.nombre, a.orden, cp.numero_preguntas, cp.puntaje_pregunta
         FROM configuraciones_puntaje cp
@@ -781,8 +766,7 @@ async def download_resultado_pdf(simulacro_id: int, token: str = None):
         ORDER BY a.orden, a.nombre
     """, (grupo_id,))
     configs = cur.fetchall()
-    
-    # Obtener resultados del detalle (para calcular aciertos/errores/blancos)
+
     cur.execute("""
         SELECT 
             p.asignatura_id,
@@ -796,8 +780,7 @@ async def download_resultado_pdf(simulacro_id: int, token: str = None):
         GROUP BY p.asignatura_id
     """, (simulacro_id,))
     resultados_raw = cur.fetchall()
-    
-    # Mapear resultados por asignatura_id
+
     resultados_map = {}
     for r in resultados_raw:
         resultados_map[r[0]] = {
@@ -805,24 +788,20 @@ async def download_resultado_pdf(simulacro_id: int, token: str = None):
             'errores': r[3] or 0,
             'blancos': r[4] or 0
         }
-    
-    # Construir lista de resultados por asignatura
+
     resultados_asignatura = []
     for cfg in configs:
         asignat_id = cfg[0]
         nombre = cfg[1]
-        orden = cfg[2]
         num_preguntas = cfg[3]
         puntaje_pregunta = float(cfg[4]) if cfg[4] else 1.0
-        
+
         res = resultados_map.get(asignat_id, {'aciertos': 0, 'errores': 0, 'blancos': 0})
         aciertos = res['aciertos']
         errores = res['errores']
         blancos = res['blancos']
-        
-        # Calcular puntaje: acierto * puntaje_pregunta - errores * 1.125 (penalidad)
         puntaje = (aciertos * puntaje_pregunta) - (errores * 1.125)
-            
+
         resultados_asignatura.append({
             'asignatura': nombre,
             'total': num_preguntas,
@@ -831,50 +810,27 @@ async def download_resultado_pdf(simulacro_id: int, token: str = None):
             'blancos': blancos,
             'puntaje': round(puntaje, 2)
         })
-    
-    # Obtener total general desde la tabla simulacros
-    cur.execute("""
-        SELECT 
-            COALESCE(puntaje_total, 0) as puntaje
-        FROM simulacros
-        WHERE id = %s
-    """, (simulacro_id,))
-    total_row = cur.fetchone()
-    
+
     conn.close()
-    
-    # Crear PDF en memoria
+
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch)
     elements = []
     styles = getSampleStyleSheet()
-    
-    # Estilo para标题
+
     title_style = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading1'],
-        fontSize=24,
-        textColor=colors.HexColor("#1e40af"),
-        spaceAfter=20,
-        alignment=1
+        'CustomTitle', parent=styles['Heading1'],
+        fontSize=24, textColor=colors.HexColor("#1e40af"), spaceAfter=20, alignment=1
     )
-    
     subtitle_style = ParagraphStyle(
-        'CustomSubtitle',
-        parent=styles['Heading2'],
-        fontSize=14,
-        textColor=colors.HexColor("#475569"),
-        spaceAfter=30,
-        alignment=1
+        'CustomSubtitle', parent=styles['Heading2'],
+        fontSize=14, textColor=colors.HexColor("#475569"), spaceAfter=30, alignment=1
     )
-    
-    # Fondo con watermark (simulado con color de fondo)
+
     from reportlab.pdfgen import canvas
     pdf = canvas.Canvas(buffer)
     pdf.setFillColor(colors.HexColor("#f0f9ff"))
     pdf.rect(0, 0, letter[0], letter[1], fill=1, stroke=0)
-    
-    # Logo Akademus (texto como marca de agua)
     pdf.setFillColor(colors.HexColor("#bfdbfe"))
     pdf.setFont("Helvetica-Bold", 60)
     pdf.saveState()
@@ -882,42 +838,32 @@ async def download_resultado_pdf(simulacro_id: int, token: str = None):
     pdf.rotate(45)
     pdf.drawCentredString(0, 0, "AKADEMUS")
     pdf.restoreState()
-    
-    # Continuar con elementos del documento
+
     elements.append(Paragraph("AKADEMUS", title_style))
     elements.append(Paragraph(f"SIMULACRO DE EXAMEN - {especialidad}", subtitle_style))
     elements.append(Paragraph(f"NOMBRE: {nombre_usuario}", ParagraphStyle('Nombre', parent=styles['Normal'], fontSize=12, spaceAfter=20)))
-    
-    # Tabla de resultados
+
     data = [["Nº", "Asignatura", "Total", "Aciertos", "Errores", "Blancos", "Puntaje"]]
-    
+
     total_puntaje = 0
     total_total = 0
     total_aciertos = 0
     total_errores = 0
     total_blancos = 0
-    
+
     for idx, row in enumerate(resultados_asignatura, 1):
-        data.append([
-            str(idx),
-            row['asignatura'],
-            str(row['total']),
-            str(row['aciertos']),
-            str(row['errores']),
-            str(row['blancos']),
-            f"{row['puntaje']:.2f}"
-        ])
+        data.append([str(idx), row['asignatura'], str(row['total']), str(row['aciertos']),
+                     str(row['errores']), str(row['blancos']), f"{row['puntaje']:.2f}"])
         total_total += row['total']
         total_aciertos += row['aciertos']
         total_errores += row['errores']
         total_blancos += row['blancos']
         total_puntaje += row['puntaje']
-    
-    # Fila de total
-    data.append(["", "TOTAL", str(total_total), str(total_aciertos), str(total_errores), str(total_blancos), f"{round(total_puntaje, 2):.2f}"])
-    
+
+    data.append(["", "TOTAL", str(total_total), str(total_aciertos), str(total_errores),
+                 str(total_blancos), f"{round(total_puntaje, 2):.2f}"])
+
     tabla = Table(data, colWidths=[0.4*inch, 2*inch, 0.7*inch, 0.7*inch, 0.7*inch, 0.7*inch, 1*inch])
-    
     estilo_tabla = TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#1e40af")),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -931,16 +877,18 @@ async def download_resultado_pdf(simulacro_id: int, token: str = None):
         ('GRID', (0, 0), (-1, -1), 1, colors.HexColor("#94a3b8")),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
     ])
-    
     tabla.setStyle(estilo_tabla)
     elements.append(tabla)
     elements.append(Spacer(1, 20))
-    elements.append(Paragraph(f"<b>TOTAL PUNTAJE OBTENIDO: {round(total_puntaje, 2):.2f}</b>", ParagraphStyle('Total', parent=styles['Normal'], fontSize=14, textColor=colors.HexColor("#1e40af"), alignment=2)))
-    
+    elements.append(Paragraph(
+        f"<b>TOTAL PUNTAJE OBTENIDO: {round(total_puntaje, 2):.2f}</b>",
+        ParagraphStyle('Total', parent=styles['Normal'], fontSize=14,
+                       textColor=colors.HexColor("#1e40af"), alignment=2)
+    ))
+
     doc.build(elements)
-    
     buffer.seek(0)
-    
+
     from fastapi.responses import StreamingResponse
     return StreamingResponse(
         buffer,
