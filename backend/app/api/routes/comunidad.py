@@ -20,7 +20,7 @@ async def llamar_gemini(pregunta: str) -> str:
     if not GEMINI_API_KEY:
         raise HTTPException(status_code=500, detail="API Key de Gemini no configurada en el servidor.")
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash:generateContent?key={GEMINI_API_KEY}"
     
     payload = {
         "contents": [{"parts": [{"text": f"{SYSTEM_PROMPT}\n\nPregunta:\n{pregunta}"}]}],
