@@ -88,6 +88,19 @@ async def iniciar_simulacro_especialidad(
         conn.close()
         raise HTTPException(status_code=403, detail="Sin simulacros disponibles. Contacta al administrador.")
 
+    # ✅ Verificar que no haya un simulacro en curso
+    cur.execute(
+        "SELECT id FROM simulacros WHERE usuario_id = %s AND estado = 'en_curso'",
+        (user_id,)
+    )
+    en_curso = cur.fetchone()
+    if en_curso:
+        conn.close()
+        raise HTTPException(
+            status_code=400,
+            detail=f"Ya tienes un simulacro en curso (ID: {en_curso[0]}). Termínalo antes de iniciar otro."
+        )
+
     # Obtener grupo académico de la especialidad
     cur.execute("""
         SELECT grupo_academico_id FROM especialidades WHERE id = %s
