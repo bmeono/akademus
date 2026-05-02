@@ -29,15 +29,15 @@ interface Resultado {
 export default function SimulacroSession() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [preguntas, setPreguntas] = useState<Pregunta[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [respuestas, setRespuestas] = useState<Map<number, number>>(new Map());
+  const [preguntas, setPreguntas]         = useState<Pregunta[]>([]);
+  const [currentIndex, setCurrentIndex]   = useState(0);
+  const [respuestas, setRespuestas]       = useState<Map<number, number>>(new Map());
   const [tiempoRestante, setTiempoRestante] = useState(180 * 60);
-  const [showTimer, setShowTimer] = useState(true);
-  const [loading, setLoading] = useState(true);
-  const [finalizado, setFinalizado] = useState(false);
-  const [resultado, setResultado] = useState<Resultado | null>(null);
-  const [guardando, setGuardando] = useState(false);
+  const [showTimer, setShowTimer]         = useState(true);
+  const [loading, setLoading]             = useState(true);
+  const [finalizado, setFinalizado]       = useState(false);
+  const [resultado, setResultado]         = useState<Resultado | null>(null);
+  const [guardando, setGuardando]         = useState(false);
 
   const simulacroId = Number(id);
 
@@ -65,6 +65,21 @@ export default function SimulacroSession() {
   const cargarSimulacro = async () => {
     try {
       const { data } = await simulacrosAPI.getTodasPreguntas(simulacroId);
+
+      // ✅ FIX: si el simulacro ya está finalizado, mostrar resultado directo
+      if (data.estado === 'finalizado') {
+        try {
+          const resData = await simulacrosAPI.getResultado(simulacroId);
+          setResultado(resData.data);
+          setFinalizado(true);
+          setLoading(false);
+        } catch {
+          // Si no hay resultado guardado, ir a la lista
+          navigate('/simulacros');
+        }
+        return;
+      }
+
       setPreguntas(data.preguntas);
       setTiempoRestante(data.tiempo_restante);
       setLoading(false);
@@ -79,15 +94,11 @@ export default function SimulacroSession() {
   };
 
   const handleSiguiente = () => {
-    if (currentIndex < preguntas.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-    }
+    if (currentIndex < preguntas.length - 1) setCurrentIndex(currentIndex + 1);
   };
 
   const handleAnterior = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-    }
+    if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
   };
 
   const handleFinalizar = useCallback(async () => {
@@ -99,17 +110,11 @@ export default function SimulacroSession() {
       opcion_seleccionada_id: opcionId,
     }));
 
-    console.log('Enviando respuestas:', respuestasArray.length);
-
     try {
       const response = await api.post('/simulacros/' + simulacroId + '/finalizar', { respuestas: respuestasArray });
-      
-      console.log('Status:', response.status);
       const data = response.data;
-      console.log('Respuesta completa:', data);
-      console.log('errores en data:', data.errores);
-      
-      const resultadoData = {
+
+      const resultadoData: Resultado = {
         id: data.id,
         total_preguntas: data.total_preguntas,
         aciertos: data.aciertos,
@@ -117,16 +122,13 @@ export default function SimulacroSession() {
         sin_responder: data.sin_responder,
         puntaje_total: data.puntaje_total,
       };
-      
-      // Guardar ID en localStorage para PDF
+
       localStorage.setItem('ultimo_simulacro_id', String(data.id));
-      
-      console.log('resultadoData:', resultadoData);
       setResultado(resultadoData);
     } catch (e) {
-      console.error('Error:', e);
+      console.error('Error al finalizar:', e);
     }
-    
+
     setGuardando(false);
   }, [simulacroId, respuestas]);
 
@@ -134,286 +136,282 @@ export default function SimulacroSession() {
     const h = Math.floor(segundos / 3600);
     const m = Math.floor((segundos % 3600) / 60);
     const s = segundos % 60;
-    if (h > 0) {
-      return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-    }
+    if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
-  const currentPregunta = preguntas[currentIndex];
-  const respuestaActual = currentPregunta ? respuestas.get(currentPregunta.id) : null;
+  const currentPregunta  = preguntas[currentIndex];
+  const respuestaActual  = currentPregunta ? respuestas.get(currentPregunta.id) : null;
+  const respondidas      = respuestas.size;
+  const sinResponder     = preguntas.length - respondidas;
 
+  // ── Loading ──
   if (loading && !finalizado) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-slate-600">Cargando preguntas...</p>
+          <div className="animate-spin w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-slate-600 font-medium">Cargando preguntas...</p>
+          <p className="text-slate-400 text-sm mt-1">Esto puede tomar unos segundos</p>
         </div>
       </div>
     );
   }
 
+  // ── Guardando ──
   if (finalizado && (guardando || !resultado)) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-slate-600">Calculando resultados...</p>
+          <div className="animate-spin w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-slate-600 font-medium">Calculando resultados...</p>
         </div>
       </div>
     );
   }
 
+  // ── Resultado ──
   if (finalizado && resultado) {
+    const pct = resultado.total_preguntas > 0
+      ? Math.round((resultado.aciertos / resultado.total_preguntas) * 100)
+      : 0;
+
     return (
-      <div className="min-h-screen bg-slate-50 py-8">
-        <div className="max-w-2xl mx-auto px-4">
-          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">Simulacro Finalizado</h1>
-            <p className="text-slate-500 mb-8">Aquí están tus resultados</p>
-
-            <div className="grid grid-cols-3 gap-4 mb-8">
-              <div className="bg-green-50 rounded-xl p-4">
-                <p className="text-4xl font-bold text-green-600">{resultado.aciertos}</p>
-                <p className="text-sm text-green-700">Aciertos</p>
-              </div>
-              <div className="bg-red-50 rounded-xl p-4">
-                <p className="text-4xl font-bold text-red-600">{resultado.errores}</p>
-                <p className="text-sm text-red-700">Errores</p>
-              </div>
-              <div className="bg-slate-100 rounded-xl p-4">
-                <p className="text-4xl font-bold text-slate-600">{resultado.sin_responder}</p>
-                <p className="text-sm text-slate-700">Sin responder</p>
-              </div>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full space-y-6">
+          <div className="text-center">
+            <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl font-bold text-primary-600">{pct}%</span>
             </div>
+            <h2 className="text-2xl font-bold text-slate-900">¡Simulacro finalizado!</h2>
+            <p className="text-slate-500 mt-1">Puntaje: <strong className="text-primary-600">{resultado.puntaje_total.toFixed(2)}</strong></p>
+          </div>
 
-            <div className="bg-primary-50 rounded-xl p-6 mb-8">
-              <p className="text-sm text-primary-600 mb-1">Puntaje Total</p>
-              <p className="text-5xl font-bold text-primary-700">{resultado.puntaje_total !== undefined ? resultado.puntaje_total.toFixed(2) : 'N/A'}</p>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-green-50 border border-green-100 rounded-xl p-3 text-center">
+              <p className="text-2xl font-bold text-green-700">{resultado.aciertos}</p>
+              <p className="text-xs text-green-600 mt-0.5">Correctas</p>
             </div>
-
-            <div className="flex flex-col gap-3">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  
-                  // Intentar obtener ID desde cualquier fuente
-                  let pid = simulacroId;
-                  if (!pid || pid === 0 || isNaN(pid)) {
-                    pid = resultado?.id;
-                  }
-                  if (!pid || pid === 0 || isNaN(pid)) {
-                    const saved = localStorage.getItem('ultimo_simulacro_id');
-                    pid = saved ? Number(saved) : null;
-                  }
-                  
-                  console.log('PDF click: pid=', pid);
-                  
-                  // Si tenemos ID, intentar descargar directamente
-                  if (pid && pid > 0) {
-                    const token = localStorage.getItem('access_token');
-                    const url = `https://akademus.onrender.com/simulacros/${pid}/resultado-pdf?token=${token}`;
-                    window.open(url, '_blank');
-                    return;
-                  }
-                  
-                  // Si no hay ID, intentar /resultado endpoint para obtener datos
-                  const savedId = localStorage.getItem('ultimo_simulacro_id');
-                  if (savedId) {
-                    const token = localStorage.getItem('access_token');
-                    fetch(`https://akademus.onrender.com/simulacros/${savedId}/resultado`, {
-                      headers: { 'Authorization': 'Bearer ' + token }
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                      console.log('Resultado API:', data);
-                      if (data.id) {
-                        const url = `https://akademus.onrender.com/simulacros/${data.id}/resultado-pdf?token=${token}`;
-                        window.open(url, '_blank');
-                      } else {
-                        alert('No se pudo obtener resultado');
-                      }
-                    })
-                    .catch(err => {
-                      console.error(err);
-                      alert('Error: ' + err.message);
-                    });
-                  } else {
-                    alert('No hay ID de simulacro. Ejecuta un simulacro primero.');
-                  }
-                }}
-                className="btn btn-secondary w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white p-3 rounded"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Descargar Resultados PDF
-              </button>
-              <button
-                onClick={() => navigate('/simulacros')}
-                className="btn btn-primary w-full"
-              >
-                Volver a Simulacros
-              </button>
-              <button
-                onClick={() => navigate('/')}
-                className="btn btn-secondary w-full"
-              >
-                Ir al Inicio
-              </button>
+            <div className="bg-red-50 border border-red-100 rounded-xl p-3 text-center">
+              <p className="text-2xl font-bold text-red-700">{resultado.errores}</p>
+              <p className="text-xs text-red-600 mt-0.5">Incorrectas</p>
+            </div>
+            <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-center">
+              <p className="text-2xl font-bold text-slate-600">{resultado.sin_responder}</p>
+              <p className="text-xs text-slate-500 mt-0.5">Sin resp.</p>
             </div>
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!currentPregunta) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p>No se pudieron cargar las preguntas</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="bg-white shadow-sm border-b sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-slate-600">
-              Pregunta {currentIndex + 1} de {preguntas.length}
-            </span>
-            {showTimer && (
-              <span className={`font-mono text-lg font-bold ${tiempoRestante < 300 ? 'text-red-600' : 'text-slate-900'}`}>
-                {formatTiempo(tiempoRestante)}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowTimer(!showTimer)}
-              className="btn btn-sm btn-secondary"
-            >
-              {showTimer ? 'Ocultar tiempo' : 'Mostrar tiempo'}
-            </button>
-            <button
-              onClick={handleFinalizar}
-              className="btn btn-sm btn-danger"
-            >
-              Terminar Simulacro
-            </button>
-          </div>
-        </div>
-
-        <div className="bg-primary-500 h-1 transition-all" style={{ width: `${((currentIndex + 1) / preguntas.length) * 100}%` }} />
-      </div>
-
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-10 gap-2 mb-6">
-          {preguntas.map((p, idx) => (
-            <button
-              key={p.id}
-              onClick={() => setCurrentIndex(idx)}
-              className={`w-8 h-8 rounded text-xs font-medium transition-colors ${
-                idx === currentIndex
-                  ? 'bg-primary-500 text-white'
-                  : respuestas.has(p.id)
-                  ? 'bg-green-500 text-white'
-                  : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
-              }`}
-            >
-              {idx + 1}
-            </button>
-          ))}
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-lg p-8">
-          <p className="text-lg text-slate-900 mb-6 whitespace-pre-wrap">{currentPregunta.enunciado}</p>
-          
-          {(currentPregunta.universidad || currentPregunta.an_exam) && (
-            <p className="text-sm text-slate-400 mb-6 italic">
-              {currentPregunta.universidad && <span>{currentPregunta.universidad}</span>}
-              {currentPregunta.universidad && currentPregunta.an_exam && <span> - </span>}
-              {currentPregunta.an_exam && <span>{currentPregunta.an_exam}</span>}
-            </p>
-          )}
-
-          {currentPregunta.imagen_url && currentPregunta.imagen_url.length > 0 && (
-            <div className="mb-6">
-              <img
-                src={currentPregunta.imagen_url}
-                alt="Imagen de la pregunta"
-                className="max-w-full max-h-64 rounded-lg border border-slate-200"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  const errorDiv = document.getElementById('img-error-' + currentPregunta.id);
-                  if (errorDiv) errorDiv.style.display = 'block';
-                }}
-              />
-              <p id={"img-error-" + currentPregunta.id} className="text-xs text-red-500 hidden">
-               ❌ Error al cargar imagen. Verificá que la URL sea correcta.
-              </p>
-            </div>
-          )}
 
           <div className="space-y-3">
-            {currentPregunta.opciones.map((opcion, idx) => {
-              const letra = String.fromCharCode(65 + idx);
-              const esSeleccionada = respuestaActual === opcion.id;
+            <button
+              onClick={() => simulacrosAPI.downloadResultadoPDF(resultado.id)}
+              className="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl transition-colors"
+            >
+              Descargar PDF
+            </button>
+            <button
+              onClick={() => navigate('/simulacros')}
+              className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl transition-colors"
+            >
+              Nuevo simulacro
+            </button>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="w-full py-3 text-slate-500 hover:text-slate-700 font-medium transition-colors"
+            >
+              Ir al dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-              return (
-                <button
-                  key={opcion.id}
-                  onClick={() => handleRespuesta(currentPregunta.id, opcion.id)}
-                  className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
-                    esSeleccionada
-                      ? 'border-primary-500 bg-primary-50'
-                      : 'border-slate-200 hover:border-primary-300 hover:bg-slate-50'
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                      esSeleccionada ? 'bg-primary-500 text-white' : 'bg-slate-100 text-slate-700'
-                    }`}>
-                      {letra}
-                    </span>
-                    <span className="flex-1">{opcion.texto}</span>
-                  </div>
-                </button>
-              );
-            })}
+  // ── Simulacro en curso ──
+  const pctProgreso = preguntas.length > 0 ? (respondidas / preguntas.length) * 100 : 0;
+  const tiempoWarning = tiempoRestante < 600; // menos de 10 min
+
+  return (
+    <div className="min-h-screen bg-slate-900 text-white flex flex-col">
+
+      {/* Barra superior */}
+      <div className="bg-slate-800 border-b border-slate-700 px-6 py-3 flex items-center justify-between flex-shrink-0">
+        <div className="flex items-center gap-4">
+          <span className="font-display font-bold text-primary-400 text-lg">AKADEMUS</span>
+          <span className="text-slate-400 text-sm">Simulacro #{simulacroId}</span>
+        </div>
+
+        <div className="flex items-center gap-6">
+          {/* Progreso */}
+          <div className="flex items-center gap-2">
+            <div className="w-32 h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-primary-500 rounded-full transition-all"
+                style={{ width: `${pctProgreso}%` }}
+              />
+            </div>
+            <span className="text-sm text-slate-300">{respondidas}/{preguntas.length}</span>
+          </div>
+
+          {/* Timer */}
+          <button
+            onClick={() => setShowTimer(!showTimer)}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-mono font-bold transition-colors ${
+              tiempoWarning
+                ? 'bg-red-900 text-red-300 animate-pulse'
+                : 'bg-slate-700 text-slate-200'
+            }`}
+          >
+            {showTimer ? formatTiempo(tiempoRestante) : '⏱ Oculto'}
+          </button>
+        </div>
+      </div>
+
+      {/* Contenido principal */}
+      <div className="flex flex-1 overflow-hidden">
+
+        {/* Panel izquierdo: Mapa de preguntas */}
+        <div className="w-56 bg-slate-800 border-r border-slate-700 flex flex-col overflow-hidden flex-shrink-0">
+          <div className="p-3 border-b border-slate-700">
+            <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">Navegación</p>
+            <p className="text-xs text-slate-500 mt-0.5">{sinResponder} sin responder</p>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3">
+            <div className="grid grid-cols-5 gap-1.5">
+              {preguntas.map((p, i) => {
+                const respondida = respuestas.has(p.id);
+                const esCurrent  = i === currentIndex;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => setCurrentIndex(i)}
+                    className={`w-8 h-8 rounded text-xs font-semibold transition-all ${
+                      esCurrent
+                        ? 'bg-primary-500 text-white ring-2 ring-primary-300'
+                        : respondida
+                          ? 'bg-green-600 text-white'
+                          : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="p-3 border-t border-slate-700 space-y-1.5">
+            <div className="flex items-center gap-2 text-xs text-slate-400">
+              <div className="w-3 h-3 rounded bg-green-600" /> Respondida
+            </div>
+            <div className="flex items-center gap-2 text-xs text-slate-400">
+              <div className="w-3 h-3 rounded bg-primary-500" /> Actual
+            </div>
+            <div className="flex items-center gap-2 text-xs text-slate-400">
+              <div className="w-3 h-3 rounded bg-slate-700" /> Sin responder
+            </div>
           </div>
         </div>
 
-        <div className="flex justify-between mt-6">
-          <button
-            onClick={handleAnterior}
-            disabled={currentIndex === 0}
-            className="btn btn-secondary disabled:opacity-50"
-          >
-            Anterior
-          </button>
-          {currentIndex < preguntas.length - 1 ? (
-            <button onClick={handleSiguiente} className="btn btn-primary">
-              Siguiente
-            </button>
-          ) : (
-            <button onClick={handleFinalizar} className="btn btn-success">
-              Finalizar
-            </button>
-          )}
-        </div>
+        {/* Panel central: Pregunta */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {currentPregunta && (
+            <>
+              {/* Pregunta */}
+              <div className="flex-1 overflow-y-auto p-8">
+                <div className="max-w-3xl mx-auto">
+                  <div className="flex items-center gap-3 mb-6">
+                    <span className="px-3 py-1 bg-primary-900 text-primary-300 text-sm rounded-full font-medium">
+                      Pregunta {currentIndex + 1} de {preguntas.length}
+                    </span>
+                    {currentPregunta.dificultad && (
+                      <span className={`px-2 py-0.5 text-xs rounded-full ${
+                        currentPregunta.dificultad === 1 ? 'bg-green-900 text-green-300' :
+                        currentPregunta.dificultad === 2 ? 'bg-yellow-900 text-yellow-300' :
+                        'bg-red-900 text-red-300'
+                      }`}>
+                        {currentPregunta.dificultad === 1 ? 'Fácil' :
+                         currentPregunta.dificultad === 2 ? 'Medio' : 'Difícil'}
+                      </span>
+                    )}
+                  </div>
 
-        <div className="mt-6 p-4 bg-amber-50 rounded-xl border border-amber-200">
-          <p className="text-sm text-amber-800">
-            <strong>Recuerda:</strong> Respuesta correcta = puntaje según especialidad | 
-            Incorrecta = -1.125 pts | Sin responder = 0 pts
-          </p>
+                  <p className="text-lg text-slate-100 leading-relaxed mb-6">
+                    {currentPregunta.enunciado}
+                  </p>
+
+                  {currentPregunta.imagen_url && (
+                    <img
+                      src={currentPregunta.imagen_url}
+                      alt="Imagen de la pregunta"
+                      className="max-w-md rounded-lg border border-slate-600 mb-6"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  )}
+
+                  <div className="space-y-3">
+                    {currentPregunta.opciones.map((opcion, idx) => {
+                      const letra   = String.fromCharCode(65 + idx);
+                      const selected = respuestaActual === opcion.id;
+                      return (
+                        <button
+                          key={opcion.id}
+                          onClick={() => handleRespuesta(currentPregunta.id, opcion.id)}
+                          className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
+                            selected
+                              ? 'bg-primary-900 border-primary-500 text-white'
+                              : 'bg-slate-800 border-slate-600 text-slate-300 hover:border-slate-400 hover:bg-slate-750'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <span className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
+                              selected ? 'bg-primary-500 text-white' : 'bg-slate-700 text-slate-400'
+                            }`}>
+                              {letra}
+                            </span>
+                            <span className="leading-relaxed pt-0.5">{opcion.texto}</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Navegación inferior */}
+              <div className="border-t border-slate-700 bg-slate-800 px-8 py-4 flex items-center justify-between flex-shrink-0">
+                <button
+                  onClick={handleAnterior}
+                  disabled={currentIndex === 0}
+                  className="px-5 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed rounded-xl text-sm font-medium transition-colors"
+                >
+                  ← Anterior
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (sinResponder > 0) {
+                      const confirmar = window.confirm(
+                        `Tienes ${sinResponder} pregunta${sinResponder !== 1 ? 's' : ''} sin responder.\n¿Deseas finalizar de todas formas?`
+                      );
+                      if (!confirmar) return;
+                    }
+                    handleFinalizar();
+                  }}
+                  className="px-6 py-2 bg-red-600 hover:bg-red-700 rounded-xl text-sm font-semibold transition-colors"
+                >
+                  Finalizar simulacro
+                </button>
+
+                <button
+                  onClick={handleSiguiente}
+                  disabled={currentIndex === preguntas.length - 1}
+                  className="px-5 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed rounded-xl text-sm font-medium transition-colors"
+                >
+                  Siguiente →
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
