@@ -523,28 +523,38 @@ async def finalizar_simulacro(
     body: dict = Body(...),
     current_user: dict = Depends(get_current_user)
 ):
-    """Recibe respuestas y calcula resultado."""
+    """Recibe respuestas y calcula resultado. Versión optimizada."""
     try:
-        respuestas = body.get('respuestas', [])
+        respuestas_raw = body.get('respuestas', [])
         user_id = current_user["id"]
+
+        # ── OPTIMIZACIÓN 1: convertir respuestas a dict O(1) en vez de loop O(n²)
+        # { str(pregunta_id): opcion_seleccionada_id }
+        respuestas_map = {
+            str(r.get('pregunta_id')): r.get('opcion_seleccionada_id')
+            for r in respuestas_raw
+        }
 
         conn = get_db_connection()
         cur = conn.cursor()
 
         cur.execute("DELETE FROM resultados_detalle WHERE simulacro_id = %s", (simulacro_id,))
 
+        # Obtener preguntas del simulacro
         cur.execute("""
-            SELECT rs.pregunta_id, rs.puntaje_pregunta 
-            FROM respuestas_simulacro rs 
+            SELECT rs.pregunta_id, rs.puntaje_pregunta
+            FROM respuestas_simulacro rs
             WHERE rs.simulacro_id = %s ORDER BY rs.orden
         """, (simulacro_id,))
         preguntas = cur.fetchall()
 
         pregunta_ids = [p[0] for p in preguntas]
+
+        # ── OPTIMIZACIÓN 2: una sola query para todas las opciones correctas
         opciones_correctas = {}
         if pregunta_ids:
             cur.execute("""
-                SELECT pregunta_id, id FROM opciones 
+                SELECT pregunta_id, id FROM opciones
                 WHERE pregunta_id IN %s AND es_correcta = TRUE
             """, (tuple(pregunta_ids),))
             for p_id, opt_id in cur.fetchall():
@@ -554,72 +564,63 @@ async def finalizar_simulacro(
         errores = 0
         sin_responder = 0
         puntaje_total = 0.0
+        resultados_batch = []   # para insert masivo
+        flashcards_batch = []   # para insert masivo
 
         for pregunta_id, puntaje in preguntas:
             puntaje_float = float(puntaje) if puntaje else 0.0
 
-            opcion_seleccionada_id = None
-            for r in respuestas:
-                if str(r.get('pregunta_id')) == str(pregunta_id):
-                    opcion_seleccionada_id = r.get('opcion_seleccionada_id')
-                    break
-
+            # O(1) lookup con el dict
+            opcion_seleccionada_id = respuestas_map.get(str(pregunta_id))
             opcion_correcta_id = opciones_correctas.get(pregunta_id)
 
-            es_correcta = None
             if opcion_seleccionada_id is None:
                 sin_responder += 1
-                es_correcta = None
+                # No respondida → no se guarda en resultados_detalle
+                # Sí cuenta como fallo para flashcard
+                flashcards_batch.append((user_id, pregunta_id))
             elif opcion_correcta_id and opcion_seleccionada_id == opcion_correcta_id:
                 aciertos += 1
                 puntaje_total += puntaje_float
-                es_correcta = True
+                resultados_batch.append((simulacro_id, pregunta_id, opcion_seleccionada_id, True))
             else:
                 errores += 1
                 puntaje_total -= 1.125
-                es_correcta = False
-
-            if es_correcta is not None:
-                cur.execute("""
-                    INSERT INTO resultados_detalle (simulacro_id, pregunta_id, opcion_seleccionada_id, es_correcta)
-                    VALUES (%s, %s, %s, %s)
-                """, (simulacro_id, pregunta_id, opcion_seleccionada_id, es_correcta))
+                resultados_batch.append((simulacro_id, pregunta_id, opcion_seleccionada_id, False))
+                flashcards_batch.append((user_id, pregunta_id))
 
         puntaje_total = round(puntaje_total, 2)
 
+        # ── OPTIMIZACIÓN 3: insert masivo de resultados_detalle (1 query en vez de N)
+        if resultados_batch:
+            cur.executemany("""
+                INSERT INTO resultados_detalle (simulacro_id, pregunta_id, opcion_seleccionada_id, es_correcta)
+                VALUES (%s, %s, %s, %s)
+            """, resultados_batch)
+
+        # Actualizar simulacro
         cur.execute("""
-            UPDATE simulacros SET puntaje_total = %s, estado = 'finalizado' 
+            UPDATE simulacros SET puntaje_total = %s, estado = 'finalizado'
             WHERE id = %s
         """, (float(puntaje_total), simulacro_id))
 
+        # Actualizar max/min puntaje del usuario
         cur.execute("""
-            UPDATE usuarios SET 
+            UPDATE usuarios SET
                 max_puntaje = GREATEST(COALESCE(max_puntaje, 0), %s),
                 min_puntaje = LEAST(COALESCE(min_puntaje, 999999), %s)
             WHERE id = %s
         """, (float(puntaje_total), float(puntaje_total), user_id))
 
-        conn.commit()
-
-        for pregunta_id, puntaje in preguntas:
-            es_fallo = True
-            for r in respuestas:
-                if str(r.get('pregunta_id')) == str(pregunta_id):
-                    opcion_seleccionada_id = r.get('opcion_seleccionada_id')
-                    cur.execute("SELECT id FROM opciones WHERE pregunta_id = %s AND es_correcta = TRUE", (pregunta_id,))
-                    opcion_correcta = cur.fetchone()
-                    if opcion_correcta and opcion_seleccionada_id == opcion_correcta[0]:
-                        es_fallo = False
-                    break
-
-            if es_fallo:
-                cur.execute("""
-                    INSERT INTO flashcards (usuario_id, pregunta_id, facilidad, intervalo, repeticiones, proxima_revision)
-                    VALUES (%s, %s, 2500, 1, 0, CURRENT_DATE)
-                    ON CONFLICT (usuario_id, pregunta_id) DO UPDATE
-                    SET facilidad = 2500, intervalo = 1, repeticiones = 0, 
-                        proxima_revision = CURRENT_DATE, estado = 'activa'
-                """, (user_id, pregunta_id))
+        # ── OPTIMIZACIÓN 4: insert masivo de flashcards (1 query en vez de N)
+        if flashcards_batch:
+            cur.executemany("""
+                INSERT INTO flashcards (usuario_id, pregunta_id, facilidad, intervalo, repeticiones, proxima_revision)
+                VALUES (%s, %s, 2500, 1, 0, CURRENT_DATE)
+                ON CONFLICT (usuario_id, pregunta_id) DO UPDATE
+                SET facilidad = 2500, intervalo = 1, repeticiones = 0,
+                    proxima_revision = CURRENT_DATE, estado = 'activa'
+            """, flashcards_batch)
 
         conn.commit()
         conn.close()
