@@ -98,11 +98,9 @@ async def iniciar_simulacro_especialidad(
                 duracion_segundos=en_curso[2],
             )
         else:
-            # Diferente especialidad → finalizar el anterior sin descontar crédito
-            cur.execute(
-                "UPDATE simulacros SET estado = 'finalizado', puntaje_total = 0 WHERE id = %s",
-                (en_curso[0],)
-            )
+            # Diferente especialidad → eliminar el anterior (nunca fue respondido)
+            cur.execute("DELETE FROM respuestas_simulacro WHERE simulacro_id = %s", (en_curso[0],))
+            cur.execute("DELETE FROM simulacros WHERE id = %s", (en_curso[0],))
             conn.commit()
             # Continúa para crear el nuevo simulacro
 
