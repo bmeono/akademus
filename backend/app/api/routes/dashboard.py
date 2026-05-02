@@ -300,11 +300,14 @@ async def get_ultimo_simulacro(current_user: dict = Depends(get_current_user)):
     conn = get_db_connection()
     cur = conn.cursor()
 
-    # Obtener último simulacro con su total real de preguntas
+    # Obtener último simulacro con resultados reales (excluye simulacros vacíos)
     cur.execute("""
-        SELECT id, total_preguntas FROM simulacros
-        WHERE usuario_id = %s AND estado = 'finalizado'
-        ORDER BY fecha_inicio DESC
+        SELECT s.id, s.total_preguntas FROM simulacros s
+        WHERE s.usuario_id = %s AND s.estado = 'finalizado'
+          AND EXISTS (
+              SELECT 1 FROM resultados_detalle rd WHERE rd.simulacro_id = s.id
+          )
+        ORDER BY s.fecha_inicio DESC
         LIMIT 1
     """, (user_id,))
     row = cur.fetchone()
