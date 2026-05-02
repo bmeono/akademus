@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAppStore } from '../store';
 import { usersAPI, adminAPI } from '../services/api';
 import { usersAPI as authService } from '../services/api';
@@ -9,10 +9,10 @@ export default function DashboardLayout() {
   const { user, logout, setUser, setAuthenticated, setPermisos, permisos } = useAppStore();
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const init = async () => {
-      //if (user && permisos) {
       if (user && Object.keys(permisos).length > 0) {
         setLoading(false);
         return;
@@ -60,11 +60,11 @@ export default function DashboardLayout() {
   };
 
   const menuItems = [
-    permisos?.dashboard && { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
-    permisos?.simulacros && { icon: BookOpen, label: 'Simulacros', href: '/simulacros' },
-    permisos?.temas_debiles && { icon: AlertTriangle, label: 'Temas Débiles', href: '/temas-debiles' },
-    permisos?.flashcards && { icon: Brain, label: 'Flashcards', href: '/flashcards' },
-    permisos?.comunidad && { icon: MessageCircle, label: 'Comunidad AKADEMUS', href: '/comunidad' },
+    permisos?.dashboard  && { icon: LayoutDashboard, label: 'Dashboard',           href: '/dashboard' },
+    permisos?.simulacros && { icon: BookOpen,        label: 'Simulacros',           href: '/simulacros' },
+    permisos?.temas_debiles && { icon: AlertTriangle, label: 'Temas Débiles',       href: '/temas-debiles' },
+    permisos?.flashcards && { icon: Brain,            label: 'Flashcards',           href: '/flashcards' },
+    permisos?.comunidad  && { icon: MessageCircle,    label: 'Comunidad AKADEMUS',   href: '/comunidad' },
   ].filter(Boolean);
 
   const isAdmin = user?.rol_id === 1;
@@ -75,32 +75,41 @@ export default function DashboardLayout() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
-      <aside className="w-64 bg-white border-r border-slate-200 fixed h-full">
+      <aside className="w-64 bg-white border-r border-slate-200 fixed h-full flex flex-col">
         <div className="p-6">
           <h1 className="text-2xl font-display font-bold text-gradient">Akademus</h1>
         </div>
 
-        <nav className="px-4 space-y-1">
-          {menuItems.map((item) => (
-            <a 
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-primary-600 transition-colors"
-             >
-              <item.icon className="w-5 h-5" />
-              {item.label}
-            </a>
-          ))}
+        <nav className="px-4 space-y-1 flex-1">
+          {menuItems.map((item) => {
+            const isActive = location.pathname === item.href ||
+              (item.href !== '/dashboard' && location.pathname.startsWith(item.href));
+            return (
+              // ✅ Link en vez de <a href> — navegación sin recarga
+              <Link
+                key={item.href}
+                to={item.href}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+                  isActive
+                    ? 'bg-primary-50 text-primary-600 font-medium'
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-primary-600'
+                }`}
+              >
+                <item.icon className="w-5 h-5" />
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200">
+        <div className="p-4 border-t border-slate-200">
           <div className="flex items-center gap-3 px-4 py-3 mb-2">
             <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
               <User className="w-5 h-5 text-primary-600" />
